@@ -1,0 +1,14 @@
+{application, match_stream,
+ [
+  {description, "Watch your favorite games through tcp"},
+  {vsn, "0.1"},
+  {registered, []},
+  {applications, [
+                  kernel,
+                  stdlib,
+                  crypto,
+                  inets
+                 ]},
+  {mod, {match_stream, []}},
+  {env, []}
+ ]}.

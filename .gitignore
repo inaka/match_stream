@@ -1,0 +1,8 @@
+deps
+doc
+ebin
+logs
+.DS_Store
+erl_crash.dump
+Mnesia*
+*.orig

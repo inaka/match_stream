@@ -8,7 +8,7 @@
 
 -behaviour(supervisor).
 
--export([start_link/0, start_client/0, init/1]).
+-export([start_link/0, start_user/1, init/1]).
 
 %% ====================================================================
 %% External functions
@@ -19,9 +19,9 @@ start_link() ->
 	supervisor:start_link({local, ?MODULE}, ?MODULE, []).
 
 %% @doc  Starts a new client process
--spec start_client() -> {ok, pid() | undefined} | {error, term()}.
-start_client() ->
-  supervisor:start_child(?MODULE, []).
+-spec start_user(match_stream:user_id()) -> {ok, pid()} | {error, term()}.
+start_user(User) ->
+  supervisor:start_child(?MODULE, [User]).
 
 %% ====================================================================
 %% Server functions

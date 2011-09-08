@@ -63,10 +63,7 @@ handle_call({watch, MatchId, Client}, _From, State) ->
     {ok, MatchStatus} = match_stream_match:status(MatchId),
     ok = match_stream_client:send(Client, MatchStatus),
     %% Then we subscribe to the match stream so we can get updates from now on
-    {ok, Mgr} = match_stream_match:event_manager(MatchId),
-    ok = gen_event:add_sup_handler(Mgr,
-                                   {match_stream_user_handler, {State#state.user_id, MatchId}},
-                                   {self(), MatchId}),
+    ok = match_stream_user_handler:add_handler(MatchId, State#state.user_id, Client),
     ClientRef = erlang:monitor(process, Client),
     {reply, ok, State#state{matches = [{Client, MatchId, ClientRef} | State#state.matches]}}
   catch
@@ -88,10 +85,14 @@ handle_cast(Event, State) ->
 
 %% @hidden
 -spec handle_info(term(), state()) -> {noreply, state()} | {stop, normal, state()}.
-handle_info({'gen_event_EXIT', {match_stream_user_handler, {UserId, MatchId}}, _Reason},
+handle_info({'gen_event_EXIT', {match_stream_user_handler, {MatchId, UserId, Client}}, _Reason},
             State = #state{user_id = UserId}) ->
-  case lists:keytake(MatchId, 2, State#state.matches) of
-    {value, {Client, MatchId, ClientRef}, OtherMatches} ->
+  case lists:partition(
+         fun({C, M, _}) -> M == MatchId andalso C == Client end,
+         State#state.matches) of
+    {[], _} ->
+      {noreply, State};
+    {[{Client, MatchId, ClientRef}], OtherMatches} ->
       _ = erlang:demonitor(ClientRef, [flush]),
       ok = match_stream_client:disconnect(Client),
       case OtherMatches of
@@ -99,16 +100,13 @@ handle_info({'gen_event_EXIT', {match_stream_user_handler, {UserId, MatchId}}, _
           {stop, normal, State#state{matches = []}};
         OtherMatches ->
           {noreply, State#state{matches = OtherMatches}}
-      end;
-    false ->
-      {noreply, State}
+      end
   end;
 handle_info({'DOWN', ClientRef, _Type, Client, _Info}, State) ->
   case lists:keytake(ClientRef, 3, State#state.matches) of
     {value, {Client, MatchId, ClientRef}, OtherMatches} ->
       try
-        {ok, Mgr} = match_stream_match:event_manager(MatchId),
-        ok = gen_event:delete_handler(Mgr, {match_stream_user_handler, State#state.user_id}, [])
+        match_stream_user_handler:delete_handler(MatchId, State#state.user_id, Client)
       catch
         _:Error ->
           error_logger:warning_msg("~s couldn't unsubscribe to ~s: ~p~n", [State#state.user_id, MatchId, Error])

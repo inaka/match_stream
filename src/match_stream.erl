@@ -32,7 +32,9 @@
 -type team() :: binary().
 -type match_id() :: binary().
 -type user_id() :: binary().
--type event_kind() :: start | stop | shot | offside | foul | corner | throwin | penalty | freekick | substitution | goal.
+-type event_kind() :: status | start | stop | halftime |
+                      shot | save | goal | corner | goalkick |
+                      offside | foul | penalty | freekick | substitution | throwin.
 -type event() :: #match_stream_event{}.
 -export_type([team/0, match_id/0, user_id/0, event_kind/0, event/0]).
 
@@ -56,7 +58,7 @@ stop() -> application:stop(rpcio).
 %% @doc Registers a match
 -spec new_match(team(), team()) -> match_id().
 new_match(Home, Visiting) ->
-  match_stream_db:register_game(Home, Visiting).
+  match_stream_match:new(Home, Visiting).
 
 %% @doc Something happened in a match
 -spec register_event(event()) -> ok.

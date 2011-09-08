@@ -82,7 +82,7 @@ handle_info({inet_async, ListSock, Ref, {ok, CliSocket}},
     ok = gen_tcp:controlling_process(CliSocket, Pid),
     
     %% Instruct the new FSM that it owns the socket.
-    ok = client:set_socket(Pid, CliSocket),
+    ok = match_stream_client:set_socket(Pid, CliSocket),
     
     %% Signal the network driver that we are ready to accept another connection
     NewRef =

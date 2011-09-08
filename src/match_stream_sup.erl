@@ -42,4 +42,6 @@ init([]) ->
                permanent, 1000, supervisor, [match_stream_client_sup]},
   UserSup = {match_stream_user_sup, {match_stream_user_sup, start_link, []},
              permanent, 1000, supervisor, [match_stream_user_sup]},
-  {ok, {{one_for_one, 5, 10}, [Listener, UserSup, ClientSup]}}.
+  MatchSup = {match_stream_match_sup, {match_stream_match_sup, start_link, []},
+             permanent, 1000, supervisor, [match_stream_match_sup]},
+  {ok, {{one_for_one, 5, 10}, [Listener, MatchSup, UserSup, ClientSup]}}.

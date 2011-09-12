@@ -41,19 +41,20 @@
                       offside | foul | penalty | freekick | card |
                       substitution | throwin.
 -type event() :: #match_stream_event{}.
--type player() :: #match_stream_player{}.
+-type player() :: {pos_integer(), binary()}. %% Number and name
 -type match() :: #match_stream_match{}.
 -type period() :: not_started | first | last | halftime | first_extra | halftime_extra | last_extra | ended.
 
 -type data() :: {home,            team()} |
-                {home_formation,  [player()]} |
+                {home_players,    [player()]} |
                 {home_score,      non_neg_integer()} |
                 {visit,           team()} |
-                {visit_formation, [player()]} |
+                {visit_players,   [player()]} |
                 {visit_score,     non_neg_integer()} |
                 {period,          period()} |
                 {start_time,      datetime()} |
                 {team,            team()} |
+                {player_team,     team()} |
                 {player,          player()} |
                 {player_out,      player()} |
                 {player_in,       player()} |
@@ -82,13 +83,13 @@ stop() -> application:stop(?MODULE).
 %%-------------------------------------------------------------------
 %% @doc Registers a match
 -spec new_match(team(), team(), date()) -> {ok, match_id()} | {error, {duplicated, match_id()}}.
-new_match(Home, Visit, StartTime) ->
-  MatchId = build_id(Home, Visit, StartTime),
+new_match(Home, Visit, StartDate) ->
+  MatchId = build_id(Home, Visit, StartDate),
   try match_stream_db:create(
         #match_stream_match{match_id  = MatchId,
                             home      = Home,
                             visit     = Visit,
-                            start_time= StartTime}) of
+                            start_time= StartDate}) of
     ok -> {ok, MatchId}
   catch
     _:duplicated ->
@@ -97,18 +98,19 @@ new_match(Home, Visit, StartTime) ->
 
 %% @doc Cancels a match
 -spec cancel_match(team(), team(), date()) -> ok.
-cancel_match(Home, Visit, StartTime) ->
-  cancel_match(build_id(Home, Visit, StartTime)).
+cancel_match(Home, Visit, StartDate) ->
+  cancel_match(build_id(Home, Visit, StartDate)).
 
 %% @doc Cancels a match
 -spec cancel_match(match_id()) -> ok.
 cancel_match(MatchId) ->
+  match_stream_match:stop(MatchId),
   match_stream_db:delete(MatchId).
 
 %% @doc Something happened in a match
 -spec register_event(team(), team(), date(), event_kind(), [{atom(), binary()}]) -> ok.
-register_event(Home, Visit, StartTime, Kind, Data) ->
-  register_event(build_id(Home, Visit, StartTime), Kind, Data).
+register_event(Home, Visit, StartDate, Kind, Data) ->
+  register_event(build_id(Home, Visit, StartDate), Kind, Data).
 
 %% @doc Something happened in a match
 -spec register_event(match_id(), event_kind(), [{atom(), binary()}]) -> ok.

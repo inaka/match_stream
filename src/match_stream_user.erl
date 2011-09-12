@@ -70,10 +70,10 @@ handle_call({watch, MatchId, Client}, _From, State) ->
                               kind      = status,
                               data      =
                                 [{home,           Match#match_stream_match.home},
-                                 {home_formation, Match#match_stream_match.home_formation},
+                                 {home_players,   Match#match_stream_match.home_players},
                                  {home_score,     Match#match_stream_match.home_score},
                                  {visit,          Match#match_stream_match.visit},
-                                 {visit_formation,Match#match_stream_match.visit_formation},
+                                 {visit_players,  Match#match_stream_match.visit_players},
                                  {visit_score,    Match#match_stream_match.visit_score},
                                  {period,         Match#match_stream_match.period}]},
         ok = match_stream_client:send(Client, MatchStatus),

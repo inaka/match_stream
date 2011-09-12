@@ -17,7 +17,7 @@
 -opaque state() :: #state{}.
 
 -export([apply/1, event_manager/1]).
--export([start_link/1]).
+-export([start_link/1, stop/1]).
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 
 %% =================================================================================================
@@ -49,6 +49,11 @@ event_manager(MatchId) ->
 start_link(MatchId) ->
   gen_server:start_link({local, process(MatchId)}, ?MODULE, MatchId, []).
 
+%% @doc Stops the match. If it's already stopped it does nothing.
+-spec stop(match_stream:match_id()) -> ok.
+stop(MatchId) ->
+  gen_server:cast(process(MatchId), stop).
+
 %% =================================================================================================
 %% Server functions
 %% =================================================================================================
@@ -67,7 +72,11 @@ handle_call(event_manager, _From, State) ->
   {reply, State#state.event_manager, State}.
 
 %% @hidden
--spec handle_cast(match_stream:event(), state()) -> {noreply, state()}.
+-spec handle_cast(match_stream:event(), state()) -> {noreply, state()} | {stop, normal, state()}.
+handle_cast(stop, State) ->
+  _ = erlang:demonitor(State#state.event_mgr_ref, [flush]),
+  ok = gen_event:stop(State#state.event_manager),
+  {stop, normal, State};
 handle_cast(Event, State) ->
   ok = match_stream_db:update(Event#match_stream_event.match_id,
                               fun(Match) -> update_match(Match, Event) end),
@@ -102,13 +111,13 @@ process(MatchId) ->
 
 -spec update_match(match_stream:match(), match_stream:event()) -> match_stream:match().
 update_match(Match, #match_stream_event{kind = start, data = Data}) ->
-  Match#match_stream_match{home_formation =
+  Match#match_stream_match{home_players =
                              proplists:get_value(
-                               home_formation, Data, Match#match_stream_match.home_formation),
+                               home_players, Data, Match#match_stream_match.home_players),
                            home_score = 0,
-                           visit_formation =
+                           visit_players =
                              proplists:get_value(
-                               visit_formation, Data, Match#match_stream_match.visit_formation),
+                               visit_players, Data, Match#match_stream_match.visit_players),
                            visit_score = 0,
                            period = first};
 update_match(Match, #match_stream_event{kind = halftime_start}) ->
@@ -139,55 +148,55 @@ update_match(Match, #match_stream_event{kind = goal, data = Data}) ->
       throw({invalid_team, {Team, Home, Visit}})
   end;
 update_match(Match, #match_stream_event{kind = card, data = Data}) ->
-  case {proplists:get_value(card, Data), proplists:get_value(player, Data),
+  case {proplists:get_value(card, Data),
+        proplists:get_value(player, Data),
+        proplists:get_value(team, Data),
         Match#match_stream_match.home, Match#match_stream_match.visit} of
-    {yellow, _, _, _} -> Match;
-    {red, Out = #match_stream_player{team = Team, number = Number}, Team, _} ->
-      Match#match_stream_match{home_formation =
-                                 case lists:keytake(Number, #match_stream_player.number,
-                                                    Match#match_stream_match.home_formation) of
+    {yellow, _, _, _, _} -> Match;
+    {red, Out = {Number, _Name}, Team, Team, _} ->
+      Match#match_stream_match{home_players =
+                                 case lists:keytake(Number, 1,
+                                                    Match#match_stream_match.home_players) of
                                    {value, Out, Rest} -> Rest;
                                    _ -> throw({invalid_red_card, {Out, Match}})
                                  end};
-    {red, Out = #match_stream_player{team = Team, number = Number}, _, Team} ->
-      Match#match_stream_match{visit_formation =
-                                 case lists:keytake(Number, #match_stream_player.number,
-                                                    Match#match_stream_match.visit_formation) of
+    {red, Out = {Number, _Name}, Team, _, Team} ->
+      Match#match_stream_match{visit_players =
+                                 case lists:keytake(Number, 1,
+                                                    Match#match_stream_match.visit_players) of
                                    {value, Out, Rest} -> Rest;
                                    _ -> throw({invalid_red_card, {Out, Match}})
                                  end};
-    {red, Out, Home, Visit} ->
-      throw({invalid_team, {Out, Home, Visit}});
-    {Card, Out, Home, Visit} ->
-      throw({invalid_card, {Card, Out, Home, Visit}})
+    {red, Out, Team, Home, Visit} ->
+      throw({invalid_team, {Out, Team, Home, Visit}});
+    {Card, Out, Team, Home, Visit} ->
+      throw({invalid_card, {Card, Out, Team, Home, Visit}})
   end;
 update_match(Match, #match_stream_event{kind = substitution, data = Data}) ->
-  case {proplists:get_value(player_in, Data), proplists:get_value(player_out, Data),
+  case {proplists:get_value(player_in, Data),
+        proplists:get_value(player_out, Data),
+        proplists:get_value(team, Data),
         Match#match_stream_match.home, Match#match_stream_match.visit} of
-    {In = #match_stream_player{team = Team},
-     Out = #match_stream_player{team = Team,
-                               number = Number}, Team, _} ->
-      Match#match_stream_match{home_formation =
-                                 case lists:keytake(Number, #match_stream_player.number,
-                                                    Match#match_stream_match.home_formation) of
+    {In, Out = {Number, _Name}, Team, Team, _} ->
+      Match#match_stream_match{home_players =
+                                 case lists:keytake(Number, 1,
+                                                    Match#match_stream_match.home_players) of
                                    {value, Out, Rest} ->
                                      [In|Rest]; %%TODO: Place it where it belongs
                                    _ ->
                                      throw({invalid_substitution, {In, Out, Match}})
                                  end};
-    {In = #match_stream_player{team = Team},
-     Out = #match_stream_player{team = Team,
-                               number = Number}, _, Team} ->
-      Match#match_stream_match{visit_formation =
-                                 case lists:keytake(Number, #match_stream_player.number,
-                                                    Match#match_stream_match.visit_formation) of
+    {In, Out = {Number, _}, Team, _, Team} ->
+      Match#match_stream_match{visit_players =
+                                 case lists:keytake(Number, 1,
+                                                    Match#match_stream_match.visit_players) of
                                    {value, Out, Rest} ->
                                      [In|Rest]; %%TODO: Place it where it belongs
                                    _ ->
                                      throw({invalid_substitution, {In, Out, Match}})
                                  end};
-    {In, Out, Home, Visit} ->
-      throw({invalid_team, {In, Out, Home, Visit}})
+    {In, Out, Team, Home, Visit} ->
+      throw({invalid_team, {In, Out, Team, Home, Visit}})
   end;
 update_match(Match, _OtherEvent) ->
   Match.

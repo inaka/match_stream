@@ -184,14 +184,14 @@ tcp_send(Socket, Message, State) ->
 frame(#match_stream_event{timestamp = TS, kind = Kind, data = Data}) ->
   frame(
     [io_lib:format("~p: ~p:~n", [TS, Kind]) |
-     lists:map(fun({K, [#match_stream_player{}|_] = Players}) ->
+     lists:map(fun({K, Players}) when K == home_players; K == visit_players ->
                        V = lists:map(
-                             fun(#match_stream_player{number = B, name = M}) ->
+                             fun({B, M}) ->
                                      io_lib:format("\t\t ~s (~p) ~n", [M,B])
                              end, Players),
                        io_lib:format("\t~p:~n~s", [K,V]);
-                  ({K, #match_stream_player{number = B, name = M}}) ->
-                       io_lib:format("\t~p: ~s (~p)~n", [K,M,B]);
+                  ({K, {B, M}}) ->
+                       io_lib:format("\t~p: ~s (~p) ~n", [K,M,B]);
                   ({K, V}) ->
                        io_lib:format("\t~p: ~p~n", [K,V])
                end, Data)]);

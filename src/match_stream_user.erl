@@ -11,8 +11,8 @@
 
 -include("match_stream.hrl").
 
--record(state, {user_id :: match_stream:user_id(),
-                matches :: [{pid(), match_stream:match_id(), reference()}]}).
+-record(state, {user_id       :: match_stream:user_id(),
+                matches = []  :: [{pid(), match_stream:match_id(), reference()}]}).
 -opaque state() :: #state{}.
 
 -export([watch/3]).
@@ -74,16 +74,23 @@ handle_call({watch, MatchId, Client}, _From, State) ->
                                  {home_score,     Match#match_stream_match.home_score},
                                  {visit,          Match#match_stream_match.visit},
                                  {visit_formation,Match#match_stream_match.visit_formation},
-                                 {visit_score,    Match#match_stream_match.visit_score}]},
+                                 {visit_score,    Match#match_stream_match.visit_score},
+                                 {period,         Match#match_stream_match.period}]},
         ok = match_stream_client:send(Client, MatchStatus),
         %% Then we subscribe to the match stream so we can get updates from now on
-        ok = match_stream_user_handler:add_handler(MatchId, State#state.user_id, Client),
+        case Match#match_stream_match.period of
+          not_started -> match_stream_client:disconnect(Client);
+          ended -> match_stream_client:disconnect(Client);
+          _ ->
+            match_stream_user_handler:add_handler(MatchId, State#state.user_id, Client)
+        end,
         ClientRef = erlang:monitor(process, Client),
         {reply, ok, State#state{matches = [{Client, MatchId, ClientRef} | State#state.matches]}}
     end
   catch
     _:Error ->
       error_logger:warning_msg("~s couldn't subscribe to ~s: ~p~n", [State#state.user_id, MatchId, Error]),
+      ok = match_stream_client:send(Client, "ERROR: Couldn't subscribe to match.\n"),
       {reply, {error, Error}, State}
   end.
 
@@ -92,7 +99,13 @@ handle_call({watch, MatchId, Client}, _From, State) ->
 handle_cast(Event, State) ->
   MatchId = Event#match_stream_event.match_id,
   lists:foreach(
-    fun({Client, _, _}) -> ok = match_stream_client:send(Client, Event) end,
+    fun({Client, _, _}) ->
+            case Event#match_stream_event.kind of
+              stop -> match_stream_user_handler:delete_handler(MatchId, State#state.user_id, Client);
+              _ -> ok
+            end,
+            ok = match_stream_client:send(Client, Event)
+    end,
     lists:filter(
       fun({_, M, _}) -> M == MatchId end,
       State#state.matches)),
@@ -138,7 +151,8 @@ handle_info({'DOWN', ClientRef, _Type, Client, _Info}, State) ->
 
 %% @hidden
 -spec terminate(term(), state()) -> ok.
-terminate(_, _) -> ok.
+terminate(_, #state{matches = Matches}) ->
+  lists:foreach(fun({C, _, _}) -> match_stream_client:disconnect(C) end, Matches).
 
 %% @hidden
 -spec code_change(term(), state(), term()) -> {ok, state()}.

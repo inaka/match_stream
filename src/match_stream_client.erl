@@ -7,13 +7,15 @@
 -module(match_stream_client).
 -author('Fernando Benavides <fbenavides@novamens.com>').
 
+-include("match_stream.hrl").
+
 -behaviour(gen_fsm).
 
 -export([start_link/0, set_socket/2]).
 -export([init/1, handle_event/3, handle_sync_event/4, handle_info/3, terminate/3, code_change/4]).
 -export([wait_for_socket/2, wait_for_params/2, running/2]).
 -export([send/2, disconnect/1]).
-        
+
 -define(FSM_TIMEOUT, 60000).
 
 -record(state, {socket        :: port(),
@@ -179,6 +181,20 @@ tcp_send(Socket, Message, State) ->
       throw({stop, normal, State})
   end.
 
+frame(#match_stream_event{timestamp = TS, kind = Kind, data = Data}) ->
+  frame(
+    [io_lib:format("~p: ~p:~n", [TS, Kind]) |
+     lists:map(fun({K, [#match_stream_player{}|_] = Players}) ->
+                       V = lists:map(
+                             fun(#match_stream_player{number = B, name = M}) ->
+                                     io_lib:format("\t\t ~s (~p) ~n", [M,B])
+                             end, Players),
+                       io_lib:format("\t~p:~n~s", [K,V]);
+                  ({K, #match_stream_player{number = B, name = M}}) ->
+                       io_lib:format("\t~p: ~s (~p)~n", [K,M,B]);
+                  ({K, V}) ->
+                       io_lib:format("\t~p: ~p~n", [K,V])
+               end, Data)]);
 frame(Msg) -> 
   Result = [Msg, "\r\n"],
   error_logger:info_msg("To client: ~s~n", [Result]),

@@ -36,13 +36,14 @@
 -type team() :: binary().
 -type match_id() :: binary().
 -type user_id() :: binary().
--type event_kind() :: status | start | stop | halftime |
+-type event_kind() :: status | start | stop | halftime_start | halftime_stop | extratime |
                       shot | save | goal | corner | goalkick |
                       offside | foul | penalty | freekick | card |
                       substitution | throwin.
 -type event() :: #match_stream_event{}.
 -type player() :: #match_stream_player{}.
 -type match() :: #match_stream_match{}.
+-type period() :: not_started | first | last | halftime | first_extra | halftime_extra | last_extra | ended.
 
 -type data() :: {home,            team()} |
                 {home_formation,  [player()]} |
@@ -50,7 +51,7 @@
                 {visit,           team()} |
                 {visit_formation, [player()]} |
                 {visit_score,     non_neg_integer()} |
-                {period,          first | last | halftime | first_extra | last_extra} |
+                {period,          period()} |
                 {start_time,      datetime()} |
                 {team,            team()} |
                 {player,          player()} |
@@ -60,7 +61,7 @@
                 {comment,         binary()}.
 
 -export_type([team/0, match_id/0, user_id/0, event_kind/0, event/0, player/0, data/0, match/0,
-              datetime/0, date/0]).
+              datetime/0, date/0, period/0]).
 
 %%-------------------------------------------------------------------
 %% ADMIN API

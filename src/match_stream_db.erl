@@ -108,8 +108,9 @@ handle_call({update, MatchId, UpdateFun}, _From, State) ->
   case erldis:get(State#state.redis, MatchId) of
     nil ->
       {reply, {throw, not_found}, State};
-    Match ->
-      try erldis:set(State#state.redis, MatchId, UpdateFun(Match)) of
+    MatchBin ->
+      try erldis:set(State#state.redis, MatchId,
+                     UpdateFun(erlang:binary_to_term(MatchBin))) of
         ok -> {reply, ok, State};
         Error -> {reply, {throw, Error}, State}
       catch
@@ -141,7 +142,7 @@ handle_call({get, MatchId}, _From, State) ->
     nil ->
       {reply, {ok, not_found}, State};
     MatchBin ->
-      {reply, {ok, erlang:term_to_binary(MatchBin)}, State}
+      {reply, {ok, erlang:binary_to_term(MatchBin)}, State}
   end.
 
 %% @hidden

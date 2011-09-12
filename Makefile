@@ -7,10 +7,10 @@ clean:
 	rebar clean
 
 build_plt: all
-	rebar skip_deps=true build-plt
+	dialyzer -pa deps/*/ebin --apps erts kernel stdlib inets --output_plt ~/.match_stream_dialyzer_plt --build_plt
 
 analyze: all
-	rebar dialyze
+	dialyzer -pa deps/*/ebin --plt ~/.match_stream_dialyzer_plt -Wunmatched_returns -Werror_handling -Wbehaviours ebin
 
 update-deps:
 	rebar update-deps

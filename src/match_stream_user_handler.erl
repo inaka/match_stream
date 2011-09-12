@@ -21,14 +21,16 @@
 %% @doc Subscribes user to match.
 -spec add_handler(match_stream:match_id(), match_stream:user_id(), pid()) -> ok.
 add_handler(MatchId, UserId, Client) ->
-  {ok, Mgr} = match_stream_match:event_manager(MatchId),
-  gen_event:add_sup_handler(Mgr, {?MODULE, {MatchId, UserId, Client}}, self()).
+  gen_event:add_sup_handler(
+    match_stream_match:event_manager(MatchId),
+    {?MODULE, {MatchId, UserId, Client}}, self()).
 
 %% @doc Unsubscribes user to match
 -spec delete_handler(match_stream:match_id(), match_stream:user_id(), pid()) -> ok.
 delete_handler(MatchId, UserId, Client) ->
-  {ok, Mgr} = match_stream_match:event_manager(MatchId),
-  gen_event:delete_handler(Mgr, {match_stream_user_handler, {MatchId, UserId, Client}}, normal).
+  gen_event:delete_handler(
+    match_stream_match:event_manager(MatchId),
+    {match_stream_user_handler, {MatchId, UserId, Client}}, normal).
 
 %% ====================================================================
 %% Server functions

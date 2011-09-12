@@ -27,16 +27,40 @@
 
 -export([start/0, stop/0]).
 -export([start/2, stop/1]).
--export([new_match/2, register_event/1]).
+-export([new_match/3, cancel_match/3, register_event/5, cancel_match/1, register_event/3]).
+-export([timestamp/0]).
 
+-type date() :: {2000..3000, 1..12, 1..31}.
+-type time() :: {0..23, 0..59, 0..59}.
+-type datetime() :: {date(), time()}.
 -type team() :: binary().
 -type match_id() :: binary().
 -type user_id() :: binary().
 -type event_kind() :: status | start | stop | halftime |
                       shot | save | goal | corner | goalkick |
-                      offside | foul | penalty | freekick | substitution | throwin.
+                      offside | foul | penalty | freekick | card |
+                      substitution | throwin.
 -type event() :: #match_stream_event{}.
--export_type([team/0, match_id/0, user_id/0, event_kind/0, event/0]).
+-type player() :: #match_stream_player{}.
+-type match() :: #match_stream_match{}.
+
+-type data() :: {home,            team()} |
+                {home_formation,  [player()]} |
+                {home_score,      non_neg_integer()} |
+                {visit,           team()} |
+                {visit_formation, [player()]} |
+                {visit_score,     non_neg_integer()} |
+                {period,          first | last | halftime | first_extra | last_extra} |
+                {start_time,      datetime()} |
+                {team,            team()} |
+                {player,          player()} |
+                {player_out,      player()} |
+                {player_in,       player()} |
+                {card,            red | yellow} |
+                {comment,         binary()}.
+
+-export_type([team/0, match_id/0, user_id/0, event_kind/0, event/0, player/0, data/0, match/0,
+              datetime/0, date/0]).
 
 %%-------------------------------------------------------------------
 %% ADMIN API
@@ -46,36 +70,84 @@
 start() ->
   _ = application:start(public_key),
   _ = application:start(ssl),
-  application:start(match_stream).
+  application:start(?MODULE).
 
 %% @doc Stops the application
 -spec stop() -> ok.
-stop() -> application:stop(rpcio).
+stop() -> application:stop(?MODULE).
 
 %%-------------------------------------------------------------------
 %% SERVER API
 %%-------------------------------------------------------------------
 %% @doc Registers a match
--spec new_match(team(), team()) -> match_id().
-new_match(Home, Visiting) ->
-  match_stream_match:new(Home, Visiting).
+-spec new_match(team(), team(), date()) -> {ok, match_id()} | {error, {duplicated, match_id()}}.
+new_match(Home, Visit, StartTime) ->
+  MatchId = build_id(Home, Visit, StartTime),
+  try match_stream_db:create(
+        #match_stream_match{match_id  = MatchId,
+                            home      = Home,
+                            visit     = Visit,
+                            start_time= StartTime}) of
+    ok -> {ok, MatchId}
+  catch
+    _:duplicated ->
+      {error, {duplicated, MatchId}}
+  end.
+
+%% @doc Cancels a match
+-spec cancel_match(team(), team(), date()) -> ok.
+cancel_match(Home, Visit, StartTime) ->
+  cancel_match(build_id(Home, Visit, StartTime)).
+
+%% @doc Cancels a match
+-spec cancel_match(match_id()) -> ok.
+cancel_match(MatchId) ->
+  match_stream_db:delete(MatchId).
 
 %% @doc Something happened in a match
--spec register_event(event()) -> ok.
-register_event(Event) ->
+-spec register_event(team(), team(), date(), event_kind(), [{atom(), binary()}]) -> ok.
+register_event(Home, Visit, StartTime, Kind, Data) ->
+  register_event(build_id(Home, Visit, StartTime), Kind, Data).
+
+%% @doc Something happened in a match
+-spec register_event(match_id(), event_kind(), [{atom(), binary()}]) -> ok.
+register_event(MatchId, Kind, Data) ->
+  Event = #match_stream_event{timestamp = timestamp(),
+                              match_id  = MatchId,
+                              kind      = Kind,
+                              data      = Data},
   match_stream_match:apply(Event).
+
+%% @doc now in milliseconds
+-spec timestamp() -> pos_integer().
+timestamp() ->
+  {_, _, MicroSecs} = erlang:now(),
+  Millis = erlang:trunc(MicroSecs/1000),
+  calendar:datetime_to_gregorian_seconds(
+    calendar:universal_time()) * 1000 + Millis.
 
 %%-------------------------------------------------------------------
 %% BEHAVIOUR CALLBACKS
 %%-------------------------------------------------------------------
 %% @private
--spec start(any(), any()) -> {ok, pid()} | {error, term()}.
+-spec start(any(), any()) -> {ok, pid()}.
 start(_StartType, _StartArgs) ->
-  case match_stream_sup:start_link() of
-    {ok, Pid} -> {ok, Pid};
-    Error -> {error, Error}
-  end.
+  match_stream_sup:start_link().
 
 %% @private
 -spec stop(any()) -> ok.
 stop(_State) -> ok.
+
+%% @private
+-spec build_id(team(), team(), date()) -> match_id().
+build_id(Home, Visit, {Year, Month, Day}) ->
+  <<Home/binary, $-, Visit/binary, $-,
+    (to_binary(Year))/binary, $-,
+    (to_binary(Month))/binary, $-,
+    (to_binary(Day))/binary>>.
+
+-spec to_binary(pos_integer()) -> binary().
+to_binary(Number) when Number < 10 ->
+  <<$0, (list_to_binary(integer_to_list(Number)))/binary>>;
+to_binary(Number) ->
+  list_to_binary(integer_to_list(Number)).

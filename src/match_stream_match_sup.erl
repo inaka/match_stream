@@ -20,8 +20,8 @@ start_link() ->
 
 %% @doc  Starts a new client process
 -spec start_match(match_stream:match_id()) -> {ok, pid()} | {error, term()}.
-start_match(User) ->
-  supervisor:start_child(?MODULE, [User]).
+start_match(Match) ->
+  supervisor:start_child(?MODULE, [Match]).
 
 %% ====================================================================
 %% Server functions

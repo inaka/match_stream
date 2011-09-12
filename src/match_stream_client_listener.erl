@@ -13,10 +13,11 @@
 %% -------------------------------------------------------------------
 %% Exported functions
 %% -------------------------------------------------------------------
--export([start_link/1]).
+-export([start_link/0]).
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 
--define(TCP_OPTIONS,[binary, {packet, 0},
+-define(TCP_OPTIONS,[binary,
+                     {packet, line},
                      {keepalive, true},
                      {active, false},
                      {reuseaddr, true}]).
@@ -30,9 +31,13 @@
 %% ====================================================================
 
 %% @doc  Starts a new client listener on port Port
--spec start_link(pos_integer()) -> {ok, pid()}.
-start_link(Port) -> 
-    gen_server:start_link({local, process_name(Port)}, ?MODULE, Port, []).
+-spec start_link() -> {ok, pid()}.
+start_link() -> 
+  Port = case application:get_env(port) of
+           undefined -> 9999;
+           P -> P
+         end,
+  gen_server:start_link({local, ?MODULE}, ?MODULE, Port, []).
 
 %% ====================================================================
 %% Callback functions
@@ -133,6 +138,3 @@ set_sockopt(ListSock, CliSocket) ->
       gen_tcp:close(CliSocket),
       Error
   end.
-
-process_name(Port) ->
-  list_to_atom("italk-client_listener-" ++ integer_to_list(Port)).

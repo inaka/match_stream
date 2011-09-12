@@ -32,16 +32,14 @@ start_link() ->
 %% @hidden
 -spec init([]) -> {ok, {{one_for_one, 5, 10}, [supervisor:child_spec()]}}.
 init([]) ->
-  Port = case application:get_env(port) of
-           undefined -> 9999;
-           P -> P
-         end,
-  Listener = {match_stream_listener, {match_stream_listener, start_link, [Port]},
-              permanent, 1000, worker, [match_stream_listener]},
+  Listener = {match_stream_client_listener, {match_stream_client_listener, start_link, []},
+              permanent, 1000, worker, [match_stream_client_listener]},
   ClientSup = {match_stream_client_sup, {match_stream_client_sup, start_link, []},
                permanent, 1000, supervisor, [match_stream_client_sup]},
   UserSup = {match_stream_user_sup, {match_stream_user_sup, start_link, []},
              permanent, 1000, supervisor, [match_stream_user_sup]},
   MatchSup = {match_stream_match_sup, {match_stream_match_sup, start_link, []},
              permanent, 1000, supervisor, [match_stream_match_sup]},
-  {ok, {{one_for_one, 5, 10}, [Listener, MatchSup, UserSup, ClientSup]}}.
+  MatchDb = {match_stream_db, {match_stream_db, start_link, []},
+              permanent, 1000, worker, [match_stream_db]},
+  {ok, {{one_for_one, 5, 10}, [MatchDb, Listener, MatchSup, UserSup, ClientSup]}}.

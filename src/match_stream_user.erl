@@ -12,7 +12,7 @@
 -include("match_stream.hrl").
 
 -record(state, {user_id :: match_stream:user_id(),
-                matches :: [{match_stream:match_id(), pid(), reference()}]}).
+                matches :: [{pid(), match_stream:match_id(), reference()}]}).
 -opaque state() :: #state{}.
 
 -export([watch/3]).
@@ -60,12 +60,27 @@ init(UserId) -> {ok, #state{user_id = UserId}}.
 handle_call({watch, MatchId, Client}, _From, State) ->
   try
     %% First we get current status
-    {ok, MatchStatus} = match_stream_match:status(MatchId),
-    ok = match_stream_client:send(Client, MatchStatus),
-    %% Then we subscribe to the match stream so we can get updates from now on
-    ok = match_stream_user_handler:add_handler(MatchId, State#state.user_id, Client),
-    ClientRef = erlang:monitor(process, Client),
-    {reply, ok, State#state{matches = [{Client, MatchId, ClientRef} | State#state.matches]}}
+    case match_stream_db:get(MatchId) of
+      not_found ->
+        {reply, {error, {not_found, MatchId}}, State};
+      Match ->
+        MatchStatus =
+          #match_stream_event{timestamp = match_stream:timestamp(),
+                              match_id  = Match#match_stream_match.match_id,
+                              kind      = status,
+                              data      =
+                                [{home,           Match#match_stream_match.home},
+                                 {home_formation, Match#match_stream_match.home_formation},
+                                 {home_score,     Match#match_stream_match.home_score},
+                                 {visit,          Match#match_stream_match.visit},
+                                 {visit_formation,Match#match_stream_match.visit_formation},
+                                 {visit_score,    Match#match_stream_match.visit_score}]},
+        ok = match_stream_client:send(Client, MatchStatus),
+        %% Then we subscribe to the match stream so we can get updates from now on
+        ok = match_stream_user_handler:add_handler(MatchId, State#state.user_id, Client),
+        ClientRef = erlang:monitor(process, Client),
+        {reply, ok, State#state{matches = [{Client, MatchId, ClientRef} | State#state.matches]}}
+    end
   catch
     _:Error ->
       error_logger:warning_msg("~s couldn't subscribe to ~s: ~p~n", [State#state.user_id, MatchId, Error]),

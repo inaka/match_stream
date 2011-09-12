@@ -16,8 +16,9 @@
         
 -define(FSM_TIMEOUT, 60000).
 
--record(state, {socket    :: port(),
-                peerport  :: integer()}).
+-record(state, {socket        :: port(),
+                buffer = <<>> :: binary(),
+                peerport      :: integer()}).
 
 %% ====================================================================
 %% External functions
@@ -73,16 +74,15 @@ wait_for_socket(Other, State) ->
 
 %% @hidden
 -spec wait_for_params(term(), #state{}) -> {next_state, running, #state{}} | {stop, timeout, #state{}} | {stop, {unexpected_event, term()}, #state{}}.
-wait_for_params({data, <<0,Length:8/little-unsigned-integer-unit:8,
-                         Payload:Length/binary,255>>},
-                 State = #state{peerport = PeerPort}) ->
-  error_logger:info_msg("Data received. Length: ~p~n\tPayload:~p~n",[Length,Payload]),
-  case binary:split(Payload, <<":">>, [global]) of
+wait_for_params({data, Payload}, State = #state{peerport = PeerPort}) ->
+  error_logger:info_msg("Data received:~p~n",[Payload]),
+  case binary:split(Payload, [<<":">>, <<$\r>>, <<$\n>>], [global]) of
     [<<"VERSION">>, <<"1">>, <<"CONNECT">>, Uid, <<"MATCH">>, MatchId | _] ->
       try
         ok = match_stream_user:watch(Uid, MatchId, self())
       catch
         Type:Error ->
+          ok = tcp_send(State#state.socket, frame(io_lib:format("ERROR: ~p~n", [Error])), State),
           throw({stop, {error, Type, Error}, State})
       end,
       error_logger:info_msg("~s watching ~s using ~p ~n", [Uid, MatchId, PeerPort]);
@@ -156,7 +156,7 @@ code_change(_OldVsn, StateName, StateData, _Extra) ->
 %% ====================================================================
 %% @doc  Sends a message through TCP socket or fails gracefully 
 %%       (in a gen_fsm fashion)
--spec tcp_send(port(), binary(), term()) -> ok.
+-spec tcp_send(port(), iolist(), #state{}) -> ok.
 tcp_send(Socket, Message, State) ->
   try gen_tcp:send(Socket, Message) of
     ok ->
@@ -179,11 +179,7 @@ tcp_send(Socket, Message, State) ->
       throw({stop, normal, State})
   end.
 
-frame(List) when is_list(List) -> 
-  frame(list_to_binary(List));
-
-frame(Bin) -> 
-  Length = size(Bin),
-  Result = <<0,Length:8/little-unsigned-integer-unit:8,Bin/binary,255>>,
-  error_logger:info_msg("client sending ~p bytes:~n\t~s~n", [Length, Bin]),
+frame(Msg) -> 
+  Result = [Msg, "\r\n"],
+  error_logger:info_msg("To client: ~s~n", [Result]),
   Result.

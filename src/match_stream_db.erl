@@ -22,31 +22,31 @@
 %% =================================================================================================
 %% External functions
 %% =================================================================================================
-%% @doc creates a match
-%% @throws duplicated. If the match is already created
+%% @doc Creates a match
+%% @throws duplicated
 -spec create(match_stream:match()) -> ok.
 create(Match) ->
   make_call({create, Match}).
 
-%% @doc updates an existing match
-%% @throws not_found. If the match is not created yet
+%% @doc Updates an existing match
+%% @throws not_found
 -spec update(match_stream:match_id(), fun((match_stream:match()) -> match_stream:match())) -> ok.
 update(MatchId, UpdateFun) ->
   make_call({update, MatchId, UpdateFun}).
 
-%% @doc returns a match
+%% @doc Returns a match
 -spec get(match_stream:match_id()) -> match_stream:match() | not_found.
 get(MatchId) ->
   make_call({get, MatchId}).
 
-%% @doc deletes a match.
+%% @doc Deletes a match.
 %% Silently ignores the call if the match is not there
 -spec delete(match_stream:match_id()) -> ok.
 delete(MatchId) ->
   make_call({delete, MatchId}).
 
 %% @doc Logs an event
-%% @throws not_found. If the match is not created yet
+%% @throws not_found
 -spec log(match_stream:event()) -> ok.
 log(Event) ->
   make_call({log, Event}).

@@ -30,7 +30,7 @@
 %% External functions
 %% ====================================================================
 
-%% @doc  Starts a new client listener on port Port
+%% @doc  Starts a new client listener
 -spec start_link() -> {ok, pid()}.
 start_link() -> 
   Port = case application:get_env(port) of

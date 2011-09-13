@@ -1,0 +1,126 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<title>Module match_stream</title>
+<link rel="stylesheet" type="text/css" href="stylesheet.css" title="EDoc">
+</head>
+<body bgcolor="white">
+<div class="navbar"><a name="#navbar_top"></a><table width="100%" border="0" cellspacing="0" cellpadding="2" summary="navigation bar"><tr><td><a href="overview-summary.html" target="overviewFrame">Overview</a></td><td><a href="http://www.erlang.org/"><img src="erlang.png" align="right" border="0" alt="erlang logo"></a></td></tr></table></div>
+<hr>
+
+<h1>Module match_stream</h1>
+<ul class="index"><li><a href="#description">Description</a></li><li><a href="#types">Data Types</a></li><li><a href="#index">Function Index</a></li><li><a href="#functions">Function Details</a></li></ul>Match Stream main interface.
+<p>Copyright © (C) 2011 InakaLabs SRL</p>
+
+<p><b>Behaviours:</b> <a href="application.html"><tt>application</tt></a>.</p>
+<p><b>Authors:</b> Fernando Benavides (<a href="mailto:fernando.benavides@inakanetworks.com"><tt>fernando.benavides@inakanetworks.com</tt></a>).</p>
+
+<h2><a name="description">Description</a></h2>Match Stream main interface
+<h2><a name="types">Data Types</a></h2>
+
+<h3 class="typedecl"><a name="type-data">data()</a></h3>
+<p><tt>data() = {home, <a href="#type-team">team()</a>} | {home_players, [<a href="#type-player">player()</a>]} | {home_score, non_neg_integer()} | {visit, <a href="#type-team">team()</a>} | {visit_players, [<a href="#type-player">player()</a>]} | {visit_score, non_neg_integer()} | {period, <a href="#type-period">period()</a>} | {start_time, <a href="#type-datetime">datetime()</a>} | {team, <a href="#type-team">team()</a>} | {player_team, <a href="#type-team">team()</a>} | {player, <a href="#type-player">player()</a>} | {player_out, <a href="#type-player">player()</a>} | {player_in, <a href="#type-player">player()</a>} | {card, red | yellow} | {comment, binary()}</tt></p>
+
+
+<h3 class="typedecl"><a name="type-date">date()</a></h3>
+<p><tt>date() = {2000..3000, 1..12, 1..31}</tt></p>
+
+
+<h3 class="typedecl"><a name="type-datetime">datetime()</a></h3>
+<p><tt>datetime() = {<a href="#type-date">date()</a>, <a href="#type-time">time()</a>}</tt></p>
+
+
+<h3 class="typedecl"><a name="type-event">event()</a></h3>
+<p><tt>event() = #match_stream_event{}</tt></p>
+
+
+<h3 class="typedecl"><a name="type-event_kind">event_kind()</a></h3>
+<p><tt>event_kind() = status | start | stop | halftime_start | halftime_stop | extratime | shot | save | goal | corner | goalkick | offside | foul | penalty | freekick | card | substitution | throwin</tt></p>
+
+
+<h3 class="typedecl"><a name="type-match">match()</a></h3>
+<p><tt>match() = #match_stream_match{}</tt></p>
+
+
+<h3 class="typedecl"><a name="type-match_id">match_id()</a></h3>
+<p><tt>match_id() = binary()</tt></p>
+
+
+<h3 class="typedecl"><a name="type-period">period()</a></h3>
+<p><tt>period() = not_started | first | last | halftime | first_extra | halftime_extra | last_extra | ended</tt></p>
+
+
+<h3 class="typedecl"><a name="type-player">player()</a></h3>
+<p><tt>player() = {pos_integer(), binary()}</tt></p>
+<p>  Number and name</p>
+
+<h3 class="typedecl"><a name="type-team">team()</a></h3>
+<p><tt>team() = binary()</tt></p>
+
+
+<h3 class="typedecl"><a name="type-time">time()</a></h3>
+<p><tt>time() = {0..23, 0..59, 0..59}</tt></p>
+
+
+<h3 class="typedecl"><a name="type-user_id">user_id()</a></h3>
+<p><tt>user_id() = binary()</tt></p>
+
+
+<h2><a name="index">Function Index</a></h2>
+<table width="100%" border="1" cellspacing="0" cellpadding="2" summary="function index"><tr><td valign="top"><a href="#cancel_match-1">cancel_match/1</a></td><td>Cancels a match.</td></tr>
+<tr><td valign="top"><a href="#cancel_match-3">cancel_match/3</a></td><td>Cancels a match.</td></tr>
+<tr><td valign="top"><a href="#new_match-3">new_match/3</a></td><td>Registers a match.</td></tr>
+<tr><td valign="top"><a href="#register_event-3">register_event/3</a></td><td>Something happened in a match.</td></tr>
+<tr><td valign="top"><a href="#register_event-5">register_event/5</a></td><td>Something happened in a match.</td></tr>
+<tr><td valign="top"><a href="#start-0">start/0</a></td><td>Starts the application.</td></tr>
+<tr><td valign="top"><a href="#stop-0">stop/0</a></td><td>Stops the application.</td></tr>
+<tr><td valign="top"><a href="#timestamp-0">timestamp/0</a></td><td>now in milliseconds.</td></tr>
+</table>
+
+<h2><a name="functions">Function Details</a></h2>
+
+<h3 class="function"><a name="cancel_match-1">cancel_match/1</a></h3>
+<div class="spec">
+<p><tt>cancel_match(MatchId::<a href="#type-match_id">match_id()</a>) -&gt; ok</tt><br></p>
+</div><p>Cancels a match</p>
+
+<h3 class="function"><a name="cancel_match-3">cancel_match/3</a></h3>
+<div class="spec">
+<p><tt>cancel_match(Home::<a href="#type-team">team()</a>, Visit::<a href="#type-team">team()</a>, StartDate::<a href="#type-date">date()</a>) -&gt; ok</tt><br></p>
+</div><p>Cancels a match</p>
+
+<h3 class="function"><a name="new_match-3">new_match/3</a></h3>
+<div class="spec">
+<p><tt>new_match(Home::<a href="#type-team">team()</a>, Visit::<a href="#type-team">team()</a>, StartDate::<a href="#type-date">date()</a>) -&gt; {ok, <a href="#type-match_id">match_id()</a>} | {error, {duplicated, <a href="#type-match_id">match_id()</a>}}</tt><br></p>
+</div><p>Registers a match</p>
+
+<h3 class="function"><a name="register_event-3">register_event/3</a></h3>
+<div class="spec">
+<p><tt>register_event(MatchId::<a href="#type-match_id">match_id()</a>, Kind::<a href="#type-event_kind">event_kind()</a>, Data::[{atom(), binary()}]) -&gt; ok</tt><br></p>
+</div><p>Something happened in a match</p>
+
+<h3 class="function"><a name="register_event-5">register_event/5</a></h3>
+<div class="spec">
+<p><tt>register_event(Home::<a href="#type-team">team()</a>, Visit::<a href="#type-team">team()</a>, StartDate::<a href="#type-date">date()</a>, Kind::<a href="#type-event_kind">event_kind()</a>, Data::[{atom(), binary()}]) -&gt; ok</tt><br></p>
+</div><p>Something happened in a match</p>
+
+<h3 class="function"><a name="start-0">start/0</a></h3>
+<div class="spec">
+<p><tt>start() -&gt; ok | {error, {already_started, match_stream}}</tt><br></p>
+</div><p>Starts the application</p>
+
+<h3 class="function"><a name="stop-0">stop/0</a></h3>
+<div class="spec">
+<p><tt>stop() -&gt; ok</tt><br></p>
+</div><p>Stops the application</p>
+
+<h3 class="function"><a name="timestamp-0">timestamp/0</a></h3>
+<div class="spec">
+<p><tt>timestamp() -&gt; pos_integer()</tt><br></p>
+</div><p>now in milliseconds</p>
+<hr>
+
+<div class="navbar"><a name="#navbar_bottom"></a><table width="100%" border="0" cellspacing="0" cellpadding="2" summary="navigation bar"><tr><td><a href="overview-summary.html" target="overviewFrame">Overview</a></td><td><a href="http://www.erlang.org/"><img src="erlang.png" align="right" border="0" alt="erlang logo"></a></td></tr></table></div>
+<p><i>Generated by EDoc, Sep 13 2011, 10:55:53.</i></p>
+</body>
+</html>

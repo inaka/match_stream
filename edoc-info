@@ -1,0 +1,6 @@
+{application,match_stream}.
+{packages,[]}.
+{modules,[match_stream,match_stream_client,match_stream_client_listener,
+          match_stream_client_sup,match_stream_db,match_stream_match,
+          match_stream_match_sup,match_stream_sup,match_stream_user,
+          match_stream_user_handler,match_stream_user_sup]}.

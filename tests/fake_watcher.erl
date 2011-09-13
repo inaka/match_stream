@@ -1,4 +1,4 @@
--module(fake_match).
+-module(fake_watcher).
 
 -include("match_stream.hrl").
 

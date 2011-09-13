@@ -15,8 +15,10 @@ from_file(Filename) ->
   {ok, MatchId} = match_stream:new_match(Home, Visit, StartDate),
   lists:foreach(
     fun({sleep, Ms}) ->
+            io:format("Sleeping ~p ms....~n", [Ms]),
             timer:sleep(Ms);
        ({Kind, PreData}) ->
+            io:format("~p: ~p~n", [Kind, PreData]),
             match_stream:register_event(MatchId, Kind, parse(MatchId, Kind, PreData))
     end, Steps).
 

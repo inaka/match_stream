@@ -183,7 +183,7 @@ tcp_send(Socket, Message, State) ->
 
 frame(#match_stream_event{timestamp = TS, kind = Kind, data = Data}) ->
   frame(
-    [io_lib:format("~p: ~p:~n", [TS, Kind]) |
+    [io_lib:format("~s: ~p:~n", [dtformat(TS), Kind]) |
      lists:map(fun({K, Players}) when K == home_players; K == visit_players ->
                        V = lists:map(
                              fun({B, M}) ->
@@ -199,3 +199,10 @@ frame(Msg) ->
   Result = [Msg, "\r\n"],
   error_logger:info_msg("To client: ~s~n", [Result]),
   Result.
+
+dtformat(TS) ->
+  {{Y, M, D}, {H, N, S}} = calendar:gregorian_seconds_to_datetime(erlang:round(TS/1000)),
+  [lpad(Y), $-, lpad(M), $-, lpad(D), $\s, lpad(H), $:, lpad(N), $:, lpad(S)].
+
+lpad(X) when X < 10 -> [$0 | integer_to_list(X)];
+lpad(X) -> integer_to_list(X).

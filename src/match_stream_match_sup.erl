@@ -31,4 +31,4 @@ start_match(Match) ->
 init([]) ->
     {ok, {{simple_one_for_one, 100, 1},
             [{match_stream_match, {match_stream_match, start_link, []},
-              temporary, brutal_kill, worker, [match_stream_match]}]}}.
+              transient, brutal_kill, worker, [match_stream_match]}]}}.

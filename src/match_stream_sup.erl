@@ -32,6 +32,8 @@ start_link() ->
 %% @hidden
 -spec init([]) -> {ok, {{one_for_one, 5, 10}, [supervisor:child_spec()]}}.
 init([]) ->
+  MatchWeb = {match_stream_web, {match_stream_web, start_link, []},
+               permanent, 1000, worker, [match_stream_web]},
   Listener = {match_stream_client_listener, {match_stream_client_listener, start_link, []},
               permanent, 1000, worker, [match_stream_client_listener]},
   ClientSup = {match_stream_client_sup, {match_stream_client_sup, start_link, []},
@@ -42,4 +44,4 @@ init([]) ->
              permanent, 1000, supervisor, [match_stream_match_sup]},
   MatchDb = {match_stream_db, {match_stream_db, start_link, []},
               permanent, 1000, worker, [match_stream_db]},
-  {ok, {{one_for_one, 5, 10}, [MatchDb, Listener, MatchSup, UserSup, ClientSup]}}.
+  {ok, {{one_for_one, 5, 10}, [MatchDb, Listener, MatchWeb, MatchSup, UserSup, ClientSup]}}.

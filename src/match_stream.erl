@@ -27,7 +27,8 @@
 
 -export([start/0, stop/0]).
 -export([start/2, stop/1]).
--export([new_match/3, cancel_match/3, register_event/5, cancel_match/1, register_event/3]).
+-export([new_match/3, cancel_match/3, register_event/5, cancel_match/1, register_event/3,
+         matches/0, history/1, history/3, match/1]).
 -export([timestamp/0]).
 
 -type date() :: {2000..3000, 1..12, 1..31}.
@@ -120,6 +121,26 @@ register_event(MatchId, Kind, Data) ->
                               kind      = Kind,
                               data      = Data},
   match_stream_match:apply(Event).
+
+%% @doc List of available matches
+-spec matches() -> [match_id()].
+matches() ->
+  match_stream_db:all().
+
+%% @doc List of available matches
+-spec match(match_id()) -> not_found | match_stream:match().
+match(MatchId) ->
+  match_stream_db:get(MatchId).
+
+%% @doc List of match events
+-spec history(match_id()) -> [event()].
+history(MatchId) ->
+  match_stream_db:history(MatchId).
+
+%% @doc List of match events
+-spec history(team(), team(), date()) -> [event()].
+history(Home, Visit, StartDate) ->
+  history(build_id(Home, Visit, StartDate)).
 
 %% @doc now in milliseconds
 -spec timestamp() -> pos_integer().

@@ -1,6 +1,6 @@
 %%%-------------------------------------------------------------------
-%%% @author Fernando Benavides <greenmellon@gmail.com>
-%%% @copyright (C) 2011 Kotoko Group
+%%% @author Fernando Benavides <fernando.benavides@inakanetworks.com>
+%%% @copyright (C) 2011 Inaka Labs SRL
 %%% @doc Match Stream User
 %%% @end
 %%%-------------------------------------------------------------------

@@ -1,6 +1,6 @@
 %%%-------------------------------------------------------------------
-%%% @author Fernando Benavides <greenmellon@gmail.com>
-%%% @copyright (C) 2011 Kotoko Group
+%%% @author Fernando Benavides <fernando.benavides@inakanetworks.com>
+%%% @copyright (C) 2011 Inaka Labs SRL
 %%% @doc Match Stream Match
 %%% @end
 %%%-------------------------------------------------------------------
@@ -78,11 +78,16 @@ handle_cast(stop, State) ->
   ok = gen_event:stop(State#state.event_manager),
   {stop, normal, State};
 handle_cast(Event, State) ->
-  ok = match_stream_db:update(Event#match_stream_event.match_id,
-                              fun(Match) -> update_match(Match, Event) end),
-  ok = match_stream_db:log(Event),
-  ok = gen_event:notify(State#state.event_manager, Event),
-  {noreply, State}.
+  try
+    ok = match_stream_db:update(Event#match_stream_event.match_id,
+                                fun(Match) -> update_match(Match, Event) end),
+    ok = match_stream_db:log(Event),
+    ok = gen_event:notify(State#state.event_manager, Event),
+    {noreply, State}
+  catch
+    _:Error ->
+      {stop, Error, State}
+  end.
 
 %% @hidden
 -spec handle_info(term(), state()) -> {noreply, state()}.

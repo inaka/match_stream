@@ -6,6 +6,8 @@
 %%%-------------------------------------------------------------------
 -module(match_stream_match_sup).
 
+-include("match_stream.hrl").
+
 -behaviour(supervisor).
 
 -export([start_link/0, start_match/1, init/1]).
@@ -29,6 +31,7 @@ start_match(Match) ->
 %% @hidden
 -spec init([]) -> {ok, {{simple_one_for_one, 100, 1}, [supervisor:child_spec()]}}.
 init([]) ->
-    {ok, {{simple_one_for_one, 100, 1},
-            [{match_stream_match, {match_stream_match, start_link, []},
-              transient, brutal_kill, worker, [match_stream_match]}]}}.
+  ?INFO("Match supervisor initialized~n", []),
+  {ok, {{simple_one_for_one, 100, 1},
+        [{match_stream_match, {match_stream_match, start_link, []},
+          transient, brutal_kill, worker, [match_stream_match]}]}}.

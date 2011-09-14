@@ -8,6 +8,8 @@
 -module(match_stream_client_listener).
 -author('Fernando Benavides <fernando.benavides@inakanetworks.com>').
 
+-include("match_stream.hrl").
+
 -behaviour(gen_server).
 
 %% -------------------------------------------------------------------
@@ -45,13 +47,15 @@ start_link() ->
 %% @hidden
 -spec init(pos_integer()) -> {ok, #state{}} | {stop, term()}.
 init(Port) ->
-    case gen_tcp:listen(Port, ?TCP_OPTIONS) of
-        {ok, Socket} ->
-            {ok, Ref} = prim_inet:async_accept(Socket, -1),
-            {ok, #state{listener = Socket,
-                        acceptor = Ref}};
-        {error, Reason} ->
-            {stop, Reason}
+  case gen_tcp:listen(Port, ?TCP_OPTIONS) of
+    {ok, Socket} ->
+      {ok, Ref} = prim_inet:async_accept(Socket, -1),
+      ?INFO("Client listener initialized (listening on port ~p)~n", [Port]),
+      {ok, #state{listener = Socket,
+                  acceptor = Ref}};
+    {error, Reason} ->
+      ?THROW("Client listener couldn't listen to port ~p: ~p~n", [Port, Reason]),
+      {stop, Reason}
     end.
 
 %% @hidden

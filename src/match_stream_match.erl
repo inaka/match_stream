@@ -62,6 +62,7 @@ stop(MatchId) ->
 init(MatchId) ->
   {ok, EventMgr} = gen_event:start_link(),
   EventMgrRef = erlang:monitor(process, EventMgr),
+  ?INFO("Match ~s initialized~n", [MatchId]),
   {ok, #state{match_id      = MatchId,
               event_manager = EventMgr,
               event_mgr_ref = EventMgrRef}}.
@@ -94,7 +95,7 @@ handle_cast(Event, State) ->
 handle_info({'DOWN', EventMgrRef, _Type, EventMgr, Info},
             State = #state{event_manager  = EventMgr,
                            event_mgr_ref  = EventMgrRef}) ->
-  error_logger:warning_msg("Event manager for ~s crashed: ~p. Restarting...~n", [State#state.match_id, Info]),
+  ?WARN("Event manager for ~s crashed: ~p. Restarting...~n", [State#state.match_id, Info]),
   EventMgrRef = erlang:monitor(process, EventMgr),
   {noreply, State#state{event_manager = EventMgr,
                         event_mgr_ref = EventMgrRef}}.

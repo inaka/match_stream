@@ -7,6 +7,8 @@
 -module(match_stream_user_handler).
 -author('Fernando Benavides <fernando.benavides@inakanetworks.com>').
 
+-include("match_stream.hrl").
+
 -behaviour(gen_event).
 
 -export([add_handler/3, delete_handler/3]).
@@ -53,10 +55,10 @@ handle_call(_Request, State) -> {ok, ok, State}.
 -spec handle_info(term(), state()) -> {ok, state()}.
 handle_info({'EXIT', Pid, normal}, State) ->
   Name = lists:keyfind(registered_name, 1, erlang:process_info(self(), [registered_name])),
-  error_logger:warning_msg("Linked process ~p terminated~nState: ~p~nRunning on: ~p~n", [Pid, State, Name]),
+  ?WARN("Linked process ~p terminated~nState: ~p~nRunning on: ~p~n", [Pid, State, Name]),
   {ok, State};
 handle_info(Info, State) ->
-  error_logger:warning_msg("Unexpected Info:~n\t~p~n", [Info]),
+  ?WARN("Unexpected Info:~n\t~p~n", [Info]),
   {ok, State}.
 
 %% @hidden
@@ -64,9 +66,9 @@ handle_info(Info, State) ->
 terminate(normal, _State) ->
   ok;
 terminate(stop, #state{user_pid = UserPid}) ->
-  error_logger:warning_msg("event manager terminating... ~p should be informed~n", [UserPid]);
+  ?WARN("event manager terminating... ~p should be informed~n", [UserPid]);
 terminate({stop, Reason}, #state{user_pid = UserPid}) ->
-  error_logger:warning_msg("~p terminated with reason: ~p~n", [UserPid, Reason]);
+  ?WARN("~p terminated with reason: ~p~n", [UserPid, Reason]);
 terminate(Reason, #state{user_pid = UserPid}) ->
   error_logger:error_msg("~p terminated with reason: ~p~n", [UserPid, Reason]).
 

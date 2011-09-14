@@ -20,6 +20,8 @@
 -module(match_stream_sup).
 -author('Fernando Benavides <fernando.benavides@inakanetworks.com>').
 
+-include("match_stream.hrl").
+
 -behaviour(supervisor).
 
 -export([start_link/0, init/1]).
@@ -44,4 +46,5 @@ init([]) ->
              permanent, 1000, supervisor, [match_stream_match_sup]},
   MatchDb = {match_stream_db, {match_stream_db, start_link, []},
               permanent, 1000, worker, [match_stream_db]},
+  ?INFO("Main supervisor initialized~n", []),
   {ok, {{one_for_one, 5, 10}, [MatchDb, Listener, MatchWeb, MatchSup, UserSup, ClientSup]}}.

@@ -53,7 +53,9 @@ start_link(UserId) ->
 %% =================================================================================================
 %% @hidden
 -spec init(match_stream:user_id()) -> {ok, state()}.
-init(UserId) -> {ok, #state{user_id = UserId}}.
+init(UserId) ->
+  ?INFO("User ~s initialized~n", [UserId]),
+  {ok, #state{user_id = UserId}}.
 
 %% @hidden
 -spec handle_call({watch, match_stream:match_id(), pid()}, reference(), state()) -> {reply, ok | {error, term()}, state()}.
@@ -89,7 +91,7 @@ handle_call({watch, MatchId, Client}, _From, State) ->
     end
   catch
     _:Error ->
-      error_logger:warning_msg("~s couldn't subscribe to ~s: ~p~n", [State#state.user_id, MatchId, Error]),
+      ?WARN("~s couldn't subscribe to ~s: ~p~n", [State#state.user_id, MatchId, Error]),
       ok = match_stream_client:send(Client, "ERROR: Couldn't subscribe to match.\n"),
       {reply, {error, Error}, State}
   end.
@@ -137,7 +139,7 @@ handle_info({'DOWN', ClientRef, _Type, Client, _Info}, State) ->
         match_stream_user_handler:delete_handler(MatchId, State#state.user_id, Client)
       catch
         _:Error ->
-          error_logger:warning_msg("~s couldn't unsubscribe to ~s: ~p~n", [State#state.user_id, MatchId, Error])
+          ?WARN("~s couldn't unsubscribe to ~s: ~p~n", [State#state.user_id, MatchId, Error])
       end,
       case OtherMatches of
         [] -> %% It was the last match

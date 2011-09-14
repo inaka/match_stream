@@ -64,21 +64,22 @@ wait_for_socket({socket_ready, Socket}, State) ->
       {ok, {_Ip, Port}} -> Port;
       Error -> Error
     end,
-  error_logger:info_msg("~p connected~n", [PeerPort]),
+  ?INFO("Client on ~p connected~n", [PeerPort]),
   ok = inet:setopts(Socket, [{active, once}, {packet, 0}, binary]),
   NewState = State#state{socket = Socket, peerport = PeerPort},
   ok = tcp_send(Socket, "Welcome to Match Stream.\nTo watch the current game use: V:2:<your-name>\n", NewState),
   {next_state, wait_for_params, NewState};
 wait_for_socket(timeout, State) ->
+  ?WARN("Socket wasn't set fast enough for client on ~p~n", [State#state.peerport]),
   {stop, timeout, State};
 wait_for_socket(Other, State) ->
-  error_logger:warning_msg("Unexpected message: ~p\n", [Other]),
+  ?WARN("Unexpected message from client on ~p: ~p\n", [State#state.peerport, Other]),
   {next_state, wait_for_socket, State, ?FSM_TIMEOUT}.
 
 %% @hidden
 -spec wait_for_params(term(), #state{}) -> {next_state, running, #state{}} | {stop, timeout, #state{}} | {stop, {unexpected_event, term()}, #state{}}.
 wait_for_params({data, Payload}, State = #state{peerport = PeerPort}) ->
-  error_logger:info_msg("Data received:~p~n",[Payload]),
+  ?DEBUG("Data received from client on ~p:~p~n",[PeerPort, Payload]),
   case binary:split(Payload, [<<":">>, <<$\r>>, <<$\n>>], [global]) of
     [<<"V">>, <<"2">>, Uid | _] ->
       try
@@ -101,29 +102,30 @@ wait_for_params({data, Payload}, State = #state{peerport = PeerPort}) ->
           ok = tcp_send(State#state.socket, frame(io_lib:format("ERROR: ~p~n", [Error])), State),
           throw({stop, {error, Type, Error}, State})
       end,
-      error_logger:info_msg("~s watching ~s using ~p ~n", [Uid, MatchId, PeerPort]);
+      ?DEBUG("~s watching ~s using port ~p ~n", [Uid, MatchId, PeerPort]);
     _ -> 
-      error_logger:warning_msg("unknown socket command ~p~n",[Payload]),
+      ?THROW("unknown socket command from client on ~p: ~p~n", [PeerPort, Payload]),
       throw({stop, {unknown_client_command, Payload}, State})
   end,
   {next_state, running, State};
 wait_for_params(timeout, State) ->
-    {stop, timeout, State};
+  ?WARN("Params weren't sent fast enough for client on ~p~n", [State#state.peerport]),
+  {stop, timeout, State};
 wait_for_params(Event, State) ->
-    error_logger:warning_msg("Unexpected Event: ~p~n", [Event]),
-    {stop, {unexpected_event, Event}, State}.
+  ?WARN("Unexpected Event from client on ~p: ~p~n", [State#state.peerport, Event]),
+  {stop, {unexpected_event, Event}, State}.
 
 %% @hidden
 -spec running(term(), #state{}) -> {next_state, running, #state{}} | {stop, normal | {unexpected_event, term()}, #state{}}.
 running({send, Message}, State = #state{socket = S}) ->
-  error_logger:info_msg("Sending: ~p~n", [Message]),
+  ?INFO("Sending message to client on ~p:~n\t~p~n", [State#state.peerport, Message]),
   ok = tcp_send(S, frame(Message), State),
   {next_state, running, State};
 running(disconnect, State) ->
-  error_logger:info_msg("disconnecting...~n", []),
+  ?INFO("Disconnecting from client on ~p...~n", [State#state.peerport]),
   {stop, normal, State};
 running(Event, State) ->
-  error_logger:warning_msg("Unexpected Event:~n\t~p~n", [Event]),
+  ?WARN("Unexpected Event:~n\t~p~n", [Event]),
   {stop, {unexpected_event, Event}, State}.
 
 %% OTHER EVENTS -------------------------------------------------------
@@ -147,7 +149,7 @@ handle_info({tcp, Socket, Bin}, StateName, #state{socket = Socket} = StateData) 
     Result;
 handle_info({tcp_closed, Socket}, _StateName, #state{socket = Socket,
                                                      peerport = PeerPort} = StateData) ->
-    error_logger:info_msg("Disconnected ~p.~n", [PeerPort]),
+    ?INFO("Disconnected ~p.~n", [PeerPort]),
     {stop, normal, StateData};
 handle_info(_Info, StateName, StateData) ->
     {next_state, StateName, StateData}.
@@ -157,8 +159,8 @@ handle_info(_Info, StateName, StateData) ->
 terminate(normal, _StateName, #state{socket = Socket}) ->
   (catch gen_tcp:close(Socket)),
   ok;
-terminate(Reason, _StateName, #state{socket = Socket}) ->
-  error_logger:info_msg("Terminating client: ~p~n", [Reason]),
+terminate(Reason, _StateName, State = #state{socket = Socket}) ->
+  ?INFO("Terminating client on ~p: ~p~n", [State#state.peerport, Reason]),
   (catch gen_tcp:close(Socket)),
   ok.
 
@@ -178,20 +180,20 @@ tcp_send(Socket, Message, State) ->
     ok ->
       ok;
     {error, closed} ->
-      error_logger:info_msg("Connection closed~n", []),
+      ?INFO("Connection closed~n", []),
       throw({stop, normal, State});
     {error, timeout} ->
-      error_logger:info_msg("Connection automatically closed due to send_timeout~n", []),
+      ?INFO("Connection automatically closed due to send_timeout~n", []),
       throw({stop, normal, State});
     {error, Error} ->
-      error_logger:warning_msg("Couldn't send msg through TCP~n\tError: ~p~n", [Error]),
+      ?WARN("Couldn't send msg through TCP~n\tError: ~p~n", [Error]),
       throw({stop, {error, Error}, State})
   catch
     _:{Exception, _} ->
-      error_logger:warning_msg("Couldn't send msg through TCP~n\tError: ~p~n", [Exception]),
+      ?WARN("Couldn't send msg through TCP~n\tError: ~p~n", [Exception]),
       throw({stop, normal, State});
     _:Exception ->
-      error_logger:warning_msg("Couldn't send msg through TCP~n\tError: ~p~n", [Exception]),
+      ?WARN("Couldn't send msg through TCP~n\tError: ~p~n", [Exception]),
       throw({stop, normal, State})
   end.
 
@@ -214,10 +216,7 @@ frame(#match_stream_event{timestamp = TS, kind = Kind, data = Data}) ->
                   ({K, V}) ->
                        io_lib:format("\t~p: ~p~n", [K,V])
                end, Data)]);
-frame(Msg) -> 
-  Result = [Msg, "\r\n"],
-  error_logger:info_msg("To client: ~s~n", [Result]),
-  Result.
+frame(Msg) -> [Msg, "\r\n"].
 
 dtformat(TS) ->
   {{Y, M, D}, {H, N, S}} = calendar:gregorian_seconds_to_datetime(erlang:round(TS/1000)),

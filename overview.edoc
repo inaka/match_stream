@@ -1,0 +1,18 @@
+** this is the overview.doc file for the application 'MatchStream' **
+@author Fernando Benavides <fernando.benavides@inakanetworks.com>
+@copyright 2011 Inaka Labs SRL
+@version 1.0
+@reference Check the project on <a href="https://github.com/inaka/match_stream">Github</a>
+@title Real-time Soccer Match Streamer
+@doc
+== Overview ==
+<b>Match Streamer</b> lets you <i>watch</i> your favourite soccer matches in your terminal :)
+== Usage ==
+<ul>
+  <li>To start it run <code>$ make run</code></li>
+  <li>To connect to the server run <code>$ telnet 9999</code></li>
+  <li>Once connected, to watch a game send <code>VERSION:1:CONNECT:</code><i>your-name</i><code>:MATCH:</code><i>the-match</i></li>
+  <li>To know the available matches open http://localhost:8888/1/matches on your browser</li>
+  <li>You can also get detailed information about a match using http://localhost:8888/1/match/<i>match-id</i></li>
+  <li>You can see its history using http://localhost:8888/1/match/<i>match-id</i>/history</li>
+</ul>

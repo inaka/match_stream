@@ -31,4 +31,4 @@ start_user(User) ->
 init([]) ->
     {ok, {{simple_one_for_one, 100, 1},
             [{match_stream_user, {match_stream_user, start_link, []},
-              temporary, brutal_kill, worker, [match_stream_user]}]}}.
+              transient, brutal_kill, worker, [match_stream_user]}]}}.

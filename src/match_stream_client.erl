@@ -185,10 +185,15 @@ frame(#match_stream_event{timestamp = TS, kind = Kind, data = Data}) ->
   frame(
     [io_lib:format("~s: ~p:~n", [dtformat(TS), Kind]) |
      lists:map(fun({K, Players}) when K == home_players; K == visit_players ->
-                       V = lists:map(
-                             fun({B, M}) ->
-                                     io_lib:format("\t\t ~s (~p) ~n", [M,B])
-                             end, Players),
+                       V =
+                         case Players of
+                           [] -> "";
+                           Players ->
+                             lists:map(
+                               fun({B, M}) ->
+                                       io_lib:format("\t\t ~s (~p) ~n", [M,B])
+                               end, Players)
+                         end,
                        io_lib:format("\t~p:~n~s", [K,V]);
                   ({K, {B, M}}) ->
                        io_lib:format("\t~p: ~s (~p) ~n", [K,M,B]);

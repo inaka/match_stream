@@ -98,6 +98,7 @@ init([]) ->
       {{ok, Pwd}, {ok, Db}} ->
         erldis_client:start_link(Host, Port, Pwd, [{timeout, Timeout}], Db)
     end,
+  ?INFO("Database initialized~n", []),
   {ok, #state{redis = Redis}}.
 
 %% @hidden

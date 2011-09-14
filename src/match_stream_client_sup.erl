@@ -6,6 +6,8 @@
 %%%-------------------------------------------------------------------
 -module(match_stream_client_sup).
 
+-include("match_stream.hrl").
+
 -behaviour(supervisor).
 
 -export([start_link/0, start_client/0, init/1]).
@@ -29,6 +31,7 @@ start_client() ->
 %% @hidden
 -spec init([]) -> {ok, {{simple_one_for_one, 100, 1}, [supervisor:child_spec()]}}.
 init([]) ->
-    {ok, {{simple_one_for_one, 100, 1},
-            [{match_stream_client, {match_stream_client, start_link, []},
-              temporary, brutal_kill, worker, [match_stream_client]}]}}.
+  ?INFO("Client supervisor initialized~n", []),
+  {ok, {{simple_one_for_one, 100, 1},
+        [{match_stream_client, {match_stream_client, start_link, []},
+          temporary, brutal_kill, worker, [match_stream_client]}]}}.

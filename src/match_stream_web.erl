@@ -14,7 +14,7 @@
 
 -define(VERSION, "1").
 -define(BASE_HEADERS, [{"Access-Control-Allow-Origin",  "*"},
-                       {"Access-Control-Allow-Methods", "GET, POST, OPTIONS"},
+                       {"Access-Control-Allow-Methods", "GET,  POST, OPTIONS"},
                        {"Access-Control-Allow-Headers", "Content-Type"},
                        {"Access-Control-Max-Age",       "86400"},
                        {"Match-Stream-API-Version",     "2"}]).
@@ -27,7 +27,7 @@ start_link() ->
            undefined -> 8888;
            P -> P
          end,
-  error_logger:info_msg("Web player handler starting on port ~p~n", [Port]),
+  ?INFO("Web player handler starting on port ~p~n", [Port]),
   mochiweb_http:start([{name, ?MODULE}, {loop, {?MODULE, loop}}, {port, Port}]).
 
 %% @private
@@ -57,34 +57,34 @@ loop(Req) ->
         end;
 
       X ->
-        error_logger:warning_msg("Couldn't match anything: ~p ~n", [X]),
+        ?WARN("Couldn't match anything: ~p ~n", [X]),
         Req:respond({404, ?TEXT_HEADERS, "404 - Sorry, not found\r\n"})
     end
   catch
     _:{not_found, Name} ->
-      error_logger:warning_msg("~p not found~nPath: ~p~n~p~n", [Name, Path, erlang:get_stacktrace()]),
+      ?WARN("~p not found~nPath: ~p~n~p~n", [Name, Path, erlang:get_stacktrace()]),
       Req:respond({404, ?TEXT_HEADERS, "404 Not found: " ++ Name ++ "\r\n"});
     _:{missing_parameter, Name} ->
-      error_logger:warning_msg("Misssing parameter: ~p~nPath: ~p~n~p~n", [Name, Path, erlang:get_stacktrace()]),
+      ?WARN("Misssing parameter: ~p~nPath: ~p~n~p~n", [Name, Path, erlang:get_stacktrace()]),
       Req:respond({400, ?TEXT_HEADERS, "400 Bad Request -  Missing parameter: " ++ Name ++ "\r\n"});
     _:{error, {Error, Desc}} ->
-      error_logger:warning_msg("Error: ~p~nPath: ~p~n~p~n", [{Error, Desc}, Path, erlang:get_stacktrace()]),
+      ?WARN("Error: ~p~nPath: ~p~n~p~n", [{Error, Desc}, Path, erlang:get_stacktrace()]),
       Msg = io_lib:format("500 Runtime error - ~p ~n", [Error]),
       Req:respond({500, ?TEXT_HEADERS, Msg});
     _:{error, Error} ->
-      error_logger:warning_msg("Error: ~p~nPath: ~p~n~p~n", [Error, Path, erlang:get_stacktrace()]),
+      ?WARN("Error: ~p~nPath: ~p~n~p~n", [Error, Path, erlang:get_stacktrace()]),
       Msg = io_lib:format("500 Runtime error - ~p ~n", [Error]),
       Req:respond({500, ?TEXT_HEADERS, Msg});
     _:{Error, Desc} ->
-      error_logger:warning_msg("Error: ~p~nPath: ~p~n~p~n", [{Error, Desc}, Path, erlang:get_stacktrace()]),
+      ?WARN("Error: ~p~nPath: ~p~n~p~n", [{Error, Desc}, Path, erlang:get_stacktrace()]),
       Msg = io_lib:format("500 Runtime error - ~p ~n", [Error]),
       Req:respond({500, ?TEXT_HEADERS, Msg});
     _:Error ->
-      error_logger:warning_msg("Error: ~p~nPath: ~p~n~p~n", [Error, Path, erlang:get_stacktrace()]),
+      ?WARN("Error: ~p~nPath: ~p~n~p~n", [Error, Path, erlang:get_stacktrace()]),
       Msg = io_lib:format("500 Runtime error - ~p ~n", [Error]),
       Req:respond({500, ?TEXT_HEADERS, Msg})
   end,
-  io:format("~p: ~p - ~p ms~n", [Req:get(method), Path, match_stream:timestamp() - Prev]),
+  ?STAT("~p: ~p - ~p ms~n", [Req:get(method), Path, match_stream:timestamp() - Prev]),
   ok.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

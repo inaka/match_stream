@@ -1,3 +1,5 @@
+-include("elog.hrl").
+
 -record(match_stream_event, {timestamp  :: pos_integer(),
                              match_id   :: match_stream:match_id(),
                              kind       :: match_stream:event_kind(),

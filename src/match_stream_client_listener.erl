@@ -85,7 +85,7 @@ handle_info({inet_async, ListSock, Ref, {ok, CliSocket}},
     end,
     
     %% New client connected - spawn a new process using the simple_one_for_one supervisor.
-    error_logger:info_msg("Client ~p starting...~n", [PeerPort]),
+    ?INFO("Client ~p starting...~n", [PeerPort]),
     {ok, Pid} = match_stream_client_sup:start_client(),
     
     ok = gen_tcp:controlling_process(CliSocket, Pid),

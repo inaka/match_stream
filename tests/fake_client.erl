@@ -3,24 +3,39 @@
 -export([watch/4, watch/6]).
 
 %% @doc Spawn links N watchers
--spec watch(pos_integer(), pos_integer(), inet:ip_address() | inet:hostname(), pos_integer(), match_stream:user_id(), match_stream:match_id()) -> ok.
+-spec watch(pos_integer(), pos_integer(), inet:ip_address() | inet:hostname(), pos_integer(), match_stream:user_id(), match_stream:match_id()) -> {non_neg_integer(), non_neg_integer()}.
 watch(N, C, Server, Port, UserIdPrefix, MatchId) ->
-  lists:foreach(fun(I) ->
-                        io:format("Starting clients ~p to ~p...~n", [I+1, I+C]),
-                        lists:foreach(
-                          fun(IC) ->
-                                  UserId = <<UserIdPrefix/binary, $.,
-                                             (list_to_binary(integer_to_list(IC)))/binary>>,
-                                  proc_lib:spawn_link(
-                                    fun() ->
-                                            {T, ok} =
-                                                timer:tc(?MODULE, watch, [Server, Port, UserId, MatchId]),
-                                            io:format("Tester ~s done - ~p ms~n", [UserId, T])
-                                    end)
-                          end, lists:seq(I+1, I+C)),
-                        io:format("Hold on a second...~n", []),
-                        timer:sleep(1000)
-                end, lists:seq(0, N-1, C)).
+  Self = self(),
+  lists:foreach(
+    fun(I) ->
+            io:format("Starting clients ~p to ~p...~n", [I+1, I+C]),
+            lists:foreach(
+              fun(IC) ->
+                      UserId = <<UserIdPrefix/binary, $.,
+                                 (list_to_binary(integer_to_list(IC)))/binary>>,
+                      proc_lib:spawn_link(
+                        fun() ->
+                                try
+                                  {T, ok} =
+                                      timer:tc(?MODULE, watch, [Server, Port, UserId, MatchId]),
+                                  io:format("Tester ~s done - ~p s~n", [UserId, erlang:round(T/1000000)]),
+                                  Self ! ok
+                                catch
+                                  _:Error ->
+                                    io:format("Tester ~s failed: ~p.~n\t~p~n", [UserId, Error, erlang:get_stacktrace()]),
+                                    Self ! error
+                                end
+                        end)
+              end, lists:seq(I+1, I+C)),
+            io:format("Hold on a second...~n", []),
+            timer:sleep(1000)
+    end, lists:seq(0, N-1, C)),
+  lists:foldl(fun(_, {Ok, Err}) ->
+                      receive
+                        ok -> {Ok+1, Err};
+                        error -> {Ok, Err+1}
+                      end
+              end, {0, 0}, lists:seq(1, N)).
 
 %% @doc Connects to the server and watches a game till it ends
 -spec watch(inet:ip_address() | inet:hostname(), pos_integer(), match_stream:user_id(), match_stream:match_id()) -> ok.
@@ -64,7 +79,7 @@ loop(Socket, [Event|Events]) ->
     {tcp, Socket, <<$\t, _/binary>>} -> %% A detail line, we ignore it 
       loop(Socket, [Event|Events]);
     {tcp, Socket, <<"\r\n">>} -> %% A closing line, we close the event
-      io:format("Event on (~p): ~s~n", [self(), Event]),
+      %io:format("Event on (~p): ~s~n", [self(), Event]),
       loop(Socket, [{Event, complete}|Events]);
     {tcp, Socket, Msg} -> %% A header line, we add the event to the list
       throw({incomplete_event, Event, Msg});

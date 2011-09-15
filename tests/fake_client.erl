@@ -28,7 +28,7 @@ watch(N, C, Server, Port, UserIdPrefix, MatchId) ->
                         end)
               end, lists:seq(I+1, I+C)),
             io:format("Hold on a second...~n", []),
-            timer:sleep(1000)
+            timer:sleep(250)
     end, lists:seq(0, N-1, C)),
   lists:foldl(fun(_, {Ok, Err}) ->
                       receive

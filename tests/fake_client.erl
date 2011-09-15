@@ -1,20 +1,26 @@
 -module(fake_client).
 
--export([watch/4, watch/5]).
+-export([watch/4, watch/6]).
 
 %% @doc Spawn links N watchers
--spec watch(pos_integer(), inet:ip_address() | inet:hostname(), pos_integer(), match_stream:user_id(), match_stream:match_id()) -> ok.
-watch(N, Server, Port, UserIdPrefix, MatchId) ->
+-spec watch(pos_integer(), pos_integer(), inet:ip_address() | inet:hostname(), pos_integer(), match_stream:user_id(), match_stream:match_id()) -> ok.
+watch(N, C, Server, Port, UserIdPrefix, MatchId) ->
   lists:foreach(fun(I) ->
-                        UserId = <<UserIdPrefix/binary, $.,
-                                   (list_to_binary(integer_to_list(I)))/binary>>,
-                        proc_lib:spawn_link(
-                          fun() ->
-                                  {T, ok} =
-                                    timer:tc(?MODULE, watch, [Server, Port, UserId, MatchId]),
-                                  io:format("Tester ~s done - ~p ms~n", [UserId, T])
-                          end)
-                end, lists:seq(1, N)).
+                        io:format("Starting clients ~p to ~p...~n", [I+1, I+C]),
+                        lists:foreach(
+                          fun(IC) ->
+                                  UserId = <<UserIdPrefix/binary, $.,
+                                             (list_to_binary(integer_to_list(IC)))/binary>>,
+                                  proc_lib:spawn_link(
+                                    fun() ->
+                                            {T, ok} =
+                                                timer:tc(?MODULE, watch, [Server, Port, UserId, MatchId]),
+                                            io:format("Tester ~s done - ~p ms~n", [UserId, T])
+                                    end)
+                          end, lists:seq(I+1, I+C)),
+                        io:format("Hold on a second...~n", []),
+                        timer:sleep(1000)
+                end, lists:seq(0, N-1, C)).
 
 %% @doc Connects to the server and watches a game till it ends
 -spec watch(inet:ip_address() | inet:hostname(), pos_integer(), match_stream:user_id(), match_stream:match_id()) -> ok.

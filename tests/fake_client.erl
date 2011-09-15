@@ -11,7 +11,7 @@ watch(N, Server, Port, UserIdPrefix, MatchId) ->
                         proc_lib:spawn_link(
                           fun() ->
                                   {T, ok} =
-                                    timer:tc(fun() -> watch(Server, Port, UserId, MatchId) end),
+                                    timer:tc(?MODULE, watch, [Server, Port, UserId, MatchId]),
                                   io:format("Tester ~s done - ~p ms~n", [UserId, T])
                           end)
                 end, lists:seq(1, N)).

@@ -187,6 +187,7 @@ frame(#match_stream_event{timestamp = TS, kind = Kind, data = Data}) ->
      lists:map(fun({K, Players}) when K == home_players; K == visit_players ->
                        V =
                          case Players of
+                           undefined -> "";
                            [] -> "";
                            Players ->
                              lists:map(

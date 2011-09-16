@@ -28,7 +28,7 @@ start_link() ->
            P -> P
          end,
   ?INFO("Web player handler starting on port ~p~n", [Port]),
-  mochiweb_http:start([{name, ?MODULE}, {loop, {?MODULE, loop}}, {port, Port}]).
+  mochiweb_http:start([{name, ?MODULE}, {loop, {?MODULE, loop}}, {backlog, 128000}, {port, Port}]).
 
 %% @private
 -spec loop(atom() | tuple()) -> ok.

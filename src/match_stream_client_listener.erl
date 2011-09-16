@@ -22,7 +22,12 @@
                      {packet, line},
                      {keepalive, true},
                      {active, false},
-                     {reuseaddr, true}]).
+                     {reuseaddr, true},
+                     {nodelay, true}, %% We want to be informed even when packages are small
+                     {backlog, 128000}, %% We don't care if we have logs of pending connections, we'll process them anyway
+                     {send_timeout, 32000}, %% If we couldn't send a message in 32 secs. something is definitively wrong...
+                     {send_timeout_close, true} %%... and therefore the connection should be closed
+                     ]).
 
 -record(state, {listener :: port(), % Listening socket
                 acceptor :: term()  % Asynchronous acceptor's internal reference

@@ -1,4 +1,4 @@
-RUN := +Bc +K true -smp enable -pa ebin deps/*/ebin -s crypto -s inets -s ssl -s elog
+RUN := +Bc +K true -smp enable -pa ebin deps/*/ebin -s crypto -s inets -s ssl -s elog -name match_stream
 
 all:
 	rebar get-deps && rebar compile

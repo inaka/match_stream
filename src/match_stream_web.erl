@@ -25,7 +25,7 @@
 start_link() ->
   Port = case application:get_env(web_port) of
            undefined -> 8888;
-           P -> P
+           {ok, P} -> P
          end,
   ?INFO("Web player handler starting on port ~p~n", [Port]),
   mochiweb_http:start([{name, ?MODULE}, {loop, {?MODULE, loop}}, {backlog, 128000}, {port, Port}]).

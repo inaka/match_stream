@@ -42,7 +42,7 @@
 start_link() -> 
   Port = case application:get_env(port) of
            undefined -> 9999;
-           P -> P
+           {ok, P} -> P
          end,
   gen_server:start_link({local, ?MODULE}, ?MODULE, Port, []).
 

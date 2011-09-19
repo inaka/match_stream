@@ -30,7 +30,7 @@ watch(UserId, MatchId, Client) ->
       {ok, Pid} -> Pid;
       {error, {already_started, Pid}} -> Pid
     end,
-  case gen_server:call(UserPid, {watch, MatchId, Client}) of
+  case gen_server:call(UserPid, {watch, MatchId, Client}, 20000) of
     ok -> ok;
     {error, Error} -> throw({error, Error})
   end.
@@ -140,7 +140,8 @@ handle_info({'DOWN', Ref, _Type, Client, _Info}, State) ->
       end;
     false ->
       case lists:keytake(Ref, 4, State#state.matches) of
-        {value, {Client, _MatchId, ClientRef, Ref}, OtherMatches} ->
+        {value, {Client, MatchId, ClientRef, Ref}, OtherMatches} ->
+          ?WARN("Match ~s event manager down~n", [MatchId]),
           _ = erlang:demonitor(ClientRef, [flush]),
           ok = match_stream_client:disconnect(Client),
           case OtherMatches of

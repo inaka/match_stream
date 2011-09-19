@@ -104,7 +104,7 @@ wait_for_params(Event, State) ->
 %% @hidden
 -spec running(term(), #state{}) -> {next_state, running, #state{}} | {stop, normal | {unexpected_event, term()}, #state{}}.
 running({send, Message}, State = #state{socket = S}) ->
-  ?INFO("Sending message to client on ~p:~n\t~p~n", [State#state.peerport, Message]),
+  ?DEBUG("Sending message to client on ~p:~n\t~p~n", [State#state.peerport, Message]),
   ok = tcp_send(S, frame(Message), State),
   {next_state, running, State};
 running(disconnect, State) ->

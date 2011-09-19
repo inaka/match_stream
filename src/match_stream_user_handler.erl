@@ -23,7 +23,7 @@
 %% @doc Subscribes user to match.
 -spec add_handler(match_stream:match_id(), match_stream:user_id(), pid()) -> ok.
 add_handler(MatchId, UserId, Client) ->
-  gen_event:add_sup_handler(
+  gen_event:add_handler(
     match_stream_match:event_manager(MatchId),
     {?MODULE, {MatchId, UserId, Client}}, self()).
 

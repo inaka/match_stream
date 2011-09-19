@@ -12,7 +12,7 @@
 -include("match_stream.hrl").
 
 -record(state, {user_id       :: match_stream:user_id(),
-                matches = []  :: [{pid(), match_stream:match_id(), reference()}]}).
+                matches = []  :: [{pid(), match_stream:match_id(), reference(), reference()}]}).
 -opaque state() :: #state{}.
 
 -export([watch/3]).
@@ -80,14 +80,21 @@ handle_call({watch, MatchId, Client}, _From, State) ->
                                  {period,         Match#match_stream_match.period}]},
         ok = match_stream_client:send(Client, MatchStatus),
         %% Then we subscribe to the match stream so we can get updates from now on
-        case Match#match_stream_match.period of
-          not_started -> match_stream_client:disconnect(Client);
-          ended -> match_stream_client:disconnect(Client);
-          _ ->
-            match_stream_user_handler:add_handler(MatchId, State#state.user_id, Client)
-        end,
+        %% or we disconnect the client if there's no manager to subscribe to
+        MatchRef =
+          case Match#match_stream_match.period of
+            not_started ->
+              match_stream_client:disconnect(Client),
+              undefined;
+            ended ->
+              match_stream_client:disconnect(Client),
+              undefined;
+            _ ->
+              ok = match_stream_user_handler:add_handler(MatchId, State#state.user_id, Client),
+              erlang:monitor(process, match_stream_match:event_manager(MatchId))
+          end,
         ClientRef = erlang:monitor(process, Client),
-        {reply, ok, State#state{matches = [{Client, MatchId, ClientRef} | State#state.matches]}}
+        {reply, ok, State#state{matches = [{Client, MatchId, ClientRef, MatchRef} | State#state.matches]}}
     end
   catch
     _:Error ->
@@ -101,7 +108,7 @@ handle_call({watch, MatchId, Client}, _From, State) ->
 handle_cast(Event, State) ->
   MatchId = Event#match_stream_event.match_id,
   lists:foreach(
-    fun({Client, _, _}) ->
+    fun({Client, _, _, _}) ->
             case Event#match_stream_event.kind of
               stop -> match_stream_user_handler:delete_handler(MatchId, State#state.user_id, Client);
               _ -> ok
@@ -109,34 +116,18 @@ handle_cast(Event, State) ->
             ok = match_stream_client:send(Client, Event)
     end,
     lists:filter(
-      fun({_, M, _}) -> M == MatchId end,
+      fun({_, M, _, _}) -> M == MatchId end,
       State#state.matches)),
   {noreply, State}.
 
 %% @hidden
 -spec handle_info(term(), state()) -> {noreply, state()} | {stop, normal, state()}.
-handle_info({'gen_event_EXIT', {match_stream_user_handler, {MatchId, UserId, Client}}, _Reason},
-            State = #state{user_id = UserId}) ->
-  case lists:partition(
-         fun({C, M, _}) -> M == MatchId andalso C == Client end,
-         State#state.matches) of
-    {[], _} ->
-      {noreply, State};
-    {[{Client, MatchId, ClientRef}], OtherMatches} ->
-      _ = erlang:demonitor(ClientRef, [flush]),
-      ok = match_stream_client:disconnect(Client),
-      case OtherMatches of
-        [] -> %% It was the last match
-          {stop, normal, State#state{matches = []}};
-        OtherMatches ->
-          {noreply, State#state{matches = OtherMatches}}
-      end
-  end;
-handle_info({'DOWN', ClientRef, _Type, Client, _Info}, State) ->
-  case lists:keytake(ClientRef, 3, State#state.matches) of
-    {value, {Client, MatchId, ClientRef}, OtherMatches} ->
+handle_info({'DOWN', Ref, _Type, Client, _Info}, State) ->
+  case lists:keytake(Ref, 3, State#state.matches) of
+    {value, {Client, MatchId, Ref, MatchRef}, OtherMatches} ->
       try
-        match_stream_user_handler:delete_handler(MatchId, State#state.user_id, Client)
+        _ = match_stream_user_handler:delete_handler(MatchId, State#state.user_id, Client),
+        _ = erlang:demonitor(MatchRef, [flush])
       catch
         _:Error ->
           ?WARN("~s couldn't unsubscribe to ~s: ~p~n", [State#state.user_id, MatchId, Error])
@@ -148,13 +139,29 @@ handle_info({'DOWN', ClientRef, _Type, Client, _Info}, State) ->
           {noreply, State#state{matches = OtherMatches}}
       end;
     false ->
-      {noreply, State}
+      case lists:keytake(Ref, 4, State#state.matches) of
+        {value, {Client, _MatchId, ClientRef, Ref}, OtherMatches} ->
+          _ = erlang:demonitor(ClientRef, [flush]),
+          ok = match_stream_client:disconnect(Client),
+          case OtherMatches of
+            [] -> %% It was the last match
+              {stop, normal, State#state{matches = []}};
+            OtherMatches ->
+              {noreply, State#state{matches = OtherMatches}}
+          end;
+        false ->
+          {noreply, State}
+      end
   end.
 
 %% @hidden
 -spec terminate(term(), state()) -> ok.
-terminate(_, #state{matches = Matches}) ->
-  lists:foreach(fun({C, _, _}) -> match_stream_client:disconnect(C) end, Matches).
+terminate(_, #state{matches = Matches, user_id = Uid}) ->
+  lists:foreach(
+    fun({Client, MatchId, _, _}) ->
+            _ = match_stream_client:disconnect(Client),
+            _ = match_stream_user_handler:delete_handler(MatchId, Uid, Client)
+    end, Matches).
 
 %% @hidden
 -spec code_change(term(), state(), term()) -> {ok, state()}.

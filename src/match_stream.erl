@@ -44,6 +44,7 @@
 -type event() :: #match_stream_event{}.
 -type player() :: {pos_integer(), binary()}. %% Number and name
 -type match() :: #match_stream_match{}.
+-type user() :: #match_stream_user{}.
 -type period() :: not_started | first | last | halftime | first_extra | halftime_extra | last_extra | ended.
 
 -type data() :: {home,            team()} |
@@ -62,7 +63,7 @@
                 {card,            red | yellow} |
                 {comment,         binary()}.
 
--export_type([team/0, match_id/0, user_id/0, event_kind/0, event/0, player/0, data/0, match/0,
+-export_type([team/0, match_id/0, user_id/0, event_kind/0, event/0, player/0, data/0, match/0, user/0,
               datetime/0, date/0, period/0]).
 
 %%-------------------------------------------------------------------
@@ -106,7 +107,7 @@ cancel_match(Home, Visit, StartDate) ->
 -spec cancel_match(match_id()) -> ok.
 cancel_match(MatchId) ->
   match_stream_match:stop(MatchId),
-  match_stream_db:delete(MatchId).
+  match_stream_db:match_delete(MatchId).
 
 %% @doc Something happened in a match
 -spec register_event(team(), team(), date(), event_kind(), [{atom(), binary()}]) -> ok.
@@ -125,17 +126,17 @@ register_event(MatchId, Kind, Data) ->
 %% @doc List of available matches
 -spec matches() -> [match_id()].
 matches() ->
-  match_stream_db:all().
+  match_stream_db:match_all().
 
 %% @doc List of available matches
 -spec match(match_id()) -> not_found | match_stream:match().
 match(MatchId) ->
-  match_stream_db:get(MatchId).
+  match_stream_db:match(MatchId).
 
 %% @doc List of match events
 -spec history(match_id()) -> [event()].
 history(MatchId) ->
-  match_stream_db:history(MatchId).
+  match_stream_db:match_history(MatchId).
 
 %% @doc List of match events
 -spec history(team(), team(), date()) -> [event()].

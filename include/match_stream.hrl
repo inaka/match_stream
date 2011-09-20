@@ -5,6 +5,9 @@
                              kind       :: match_stream:event_kind(),
                              data       :: [match_stream:data()]}).
 
+-record(match_stream_user, {user_id :: match_stream:user_id(),
+                            visit_count = 1 :: pos_integer()}).
+
 -record(match_stream_match, {match_id             :: match_stream:match_id(),
                              home                 :: match_stream:team(),
                              visit                :: match_stream:team(),

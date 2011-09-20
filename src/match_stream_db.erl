@@ -17,51 +17,77 @@
 -record(state, {redis :: [pid()]}).
 -opaque state() :: #state{}.
 
--export([create/1, update/2, all/0, get/1, delete/1, log/1, history/1]).
+-export([create/1, match_update/2, user_update/2, match_all/0, user_all/0, match/1, user/1,
+         match_delete/1, user_delete/1, event_log/1, match_history/1]).
 -export([start_link/0]).
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 
 %% =================================================================================================
 %% External functions
 %% =================================================================================================
-%% @doc Creates a match
+%% @doc Creates a match or an user
 %% @throws duplicated
--spec create(match_stream:match()) -> ok.
-create(Match) ->
-  make_call({create, Match}).
+-spec create(match_stream:match() | match_stream:user()) -> ok.
+create(Object = #match_stream_match{match_id = MatchId}) ->
+  make_call({create, <<"match-", MatchId/binary>>, Object});
+create(Object = #match_stream_user{user_id = UserId}) ->
+  make_call({create, <<"user-", UserId/binary>>, Object}).
 
 %% @doc Updates an existing match
 %% @throws not_found
--spec update(match_stream:match_id(), fun((match_stream:match()) -> match_stream:match())) -> ok.
-update(MatchId, UpdateFun) ->
-  make_call({update, MatchId, UpdateFun}).
+-spec match_update(match_stream:match_id(), fun((match_stream:match()) -> match_stream:match())) -> ok.
+match_update(MatchId, UpdateFun) ->
+  make_call({update, <<"match-", MatchId/binary>>, UpdateFun}).
+
+%% @doc Updates an existing user
+%% @throws not_found
+-spec user_update(match_stream:user_id(), fun((match_stream:user()) -> match_stream:user())) -> ok.
+user_update(UserId, UpdateFun) ->
+  make_call({update, <<"user-", UserId/binary>>, UpdateFun}).
 
 %% @doc Returns the list of available matches
--spec all() -> [match_stream:match_id()].
-all() ->
-  make_call(all).
+-spec match_all() -> [match_stream:match_id()].
+match_all() ->
+  make_call({all, "match-*"}).
+
+%% @doc Returns the list of available users
+-spec user_all() -> [match_stream:user_id()].
+user_all() ->
+  make_call({all, "user-*"}).
 
 %% @doc Returns a match
--spec get(match_stream:match_id()) -> match_stream:match() | not_found.
-get(MatchId) ->
-  make_call({get, MatchId}).
+-spec match(match_stream:match_id()) -> match_stream:match() | not_found.
+match(MatchId) ->
+  make_call({get, <<"match-", MatchId/binary>>}).
+
+%% @doc Returns an user
+-spec user(match_stream:user_id()) -> match_stream:user() | not_found.
+user(UserId) ->
+  make_call({get, <<"user-", UserId/binary>>}).
 
 %% @doc Deletes a match.
 %% Silently ignores the call if the match is not there
--spec delete(match_stream:match_id()) -> ok.
-delete(MatchId) ->
-  make_call({delete, MatchId}).
+-spec match_delete(match_stream:match_id()) -> ok.
+match_delete(MatchId) ->
+  make_call({delete, <<"match-", MatchId/binary>>}),
+  make_call({delete_events, MatchId}).
+
+%% @doc Deletes an user.
+%% Silently ignores the call if the user is not there
+-spec user_delete(match_stream:user_id()) -> ok.
+user_delete(UserId) ->
+  make_call({delete, <<"user-", UserId/binary>>}).
 
 %% @doc Logs an event
 %% @throws not_found
--spec log(match_stream:event()) -> ok.
-log(Event) ->
+-spec event_log(match_stream:event()) -> ok.
+event_log(Event) ->
   make_call({log, Event}).
 
 %% @doc Returns match events
--spec history(match_stream:match_id()) -> [match_stream:event()].
-history(MatchId) ->
-  make_call({history, MatchId}).
+-spec match_history(match_stream:match_id()) -> [match_stream:event()].
+match_history(MatchId) ->
+  make_call({match_history, MatchId}).
 
 %% =================================================================================================
 %% Internal (i.e. used only by other modules) functions
@@ -154,19 +180,17 @@ make_call(Call) ->
   end.
 
 -spec handle_call(term(), pid()) -> term().
-handle_call({create, Match}, RedisConn) ->
-  Key = <<"match-", (Match#match_stream_match.match_id)/binary>>,
+handle_call({create, Key, Object}, RedisConn) ->
   case erldis:get(RedisConn, Key) of
     nil ->
-      case erldis:set(RedisConn, Key, Match) of
+      case erldis:set(RedisConn, Key, Object) of
         ok -> ok;
         Error -> throw(Error)
       end;
     _ ->
       throw(duplicated)
   end;
-handle_call({update, MatchId, UpdateFun}, RedisConn) ->
-  Key = <<"match-", MatchId/binary>>,
+handle_call({update, Key, UpdateFun}, RedisConn) ->
   case erldis:get(RedisConn, Key) of
     nil ->
       throw(not_found);
@@ -176,9 +200,10 @@ handle_call({update, MatchId, UpdateFun}, RedisConn) ->
         Error -> throw(Error)
       end
   end;
-handle_call({delete, MatchId}, RedisConn) ->
-  Key = <<"match-", MatchId/binary>>,
+handle_call({delete, Key}, RedisConn) ->
   _Removed = erldis:del(RedisConn, Key),
+  ok;
+handle_call({delete_events, MatchId}, RedisConn) ->
   Keys =
     case erldis:keys(RedisConn, "event-" ++ binary_to_list(MatchId) ++ "-*") of
       [] -> [];
@@ -200,14 +225,15 @@ handle_call({log, Event}, RedisConn) ->
         Error -> throw(Error)
       end
   end;
-handle_call(all, RedisConn) ->
+handle_call({all, Prefix}, RedisConn) ->
+  PrefixLength = length(Prefix) - 1,
   Res =
-    case erldis:keys(RedisConn, "match-*") of
+    case erldis:keys(RedisConn, Prefix) of
       [] -> [];
       [Bin1] -> binary:split(Bin1, <<" ">>, [global, trim]);
       Ids -> Ids
     end,
-  lists:map(fun(<<"match-", MatchId/binary>>) -> MatchId end, Res);
+  lists:map(fun(<<_:PrefixLength/binary, MatchId/binary>>) -> MatchId end, Res);
 handle_call({history, MatchId}, RedisConn) ->
   Keys =
     case erldis:keys(RedisConn, "event-" ++ binary_to_list(MatchId) ++ "-*") of
@@ -224,8 +250,7 @@ handle_call({history, MatchId}, RedisConn) ->
                 Bin -> [erlang:binary_to_term(Bin)|Acc]
               end
       end, [], Keys));
-handle_call({get, MatchId}, RedisConn) ->
-  Key = <<"match-", MatchId/binary>>,
+handle_call({get, Key}, RedisConn) ->
   case erldis:get(RedisConn, Key) of
     nil -> not_found;
     MatchBin -> erlang:binary_to_term(MatchBin)

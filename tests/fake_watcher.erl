@@ -51,7 +51,7 @@ parse(MatchId, PlayerEvent, Data) when PlayerEvent == shot;
       #match_stream_match{home_players = HomePlayers,
                           home = Home, visit = Visit,
                           visit_players = VisitPlayers} =
-                           match_stream_db:get(MatchId),
+                           match_stream_db:match(MatchId),
       case proplists:get_value(player_team, Data,
                                proplists:get_value(team, Data)) of
         Home ->
@@ -73,7 +73,7 @@ parse(MatchId, substitution, Data) ->
       #match_stream_match{home_players = HomePlayers,
                           home = Home, visit = Visit,
                           visit_players = VisitPlayers} =
-                           match_stream_db:get(MatchId),
+                           match_stream_db:match(MatchId),
       case proplists:get_value(team, Data) of
         Home ->
           [{player_out, {Number, proplists:get_value(Number, HomePlayers, <<"N/N">>)}} |

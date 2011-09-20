@@ -77,9 +77,9 @@ handle_cast(stop, State) ->
   {stop, normal, State};
 handle_cast(Event, State) ->
   try
-    ok = match_stream_db:update(Event#match_stream_event.match_id,
+    ok = match_stream_db:match_update(Event#match_stream_event.match_id,
                                 fun(Match) -> update_match(Match, Event) end),
-    ok = match_stream_db:log(Event),
+    ok = match_stream_db:event_log(Event),
     ok = gen_event:notify(event_manager(State#state.match_id), Event),
     {noreply, State, hibernate}
   catch

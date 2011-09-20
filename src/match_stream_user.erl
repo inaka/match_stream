@@ -54,6 +54,16 @@ start_link(UserId) ->
 %% @hidden
 -spec init(match_stream:user_id()) -> {ok, state()}.
 init(UserId) ->
+  case match_stream_db:user(UserId) of
+    not_found ->
+      match_stream_db:create(#match_stream_user{user_id = UserId});
+    _User ->
+      match_stream_db:user_update(
+        UserId,
+        fun(#match_stream_user{visit_count = V} = User) ->
+                User#match_stream_user{visit_count = V + 1}
+        end)
+  end,
   ?INFO("User ~s initialized~n", [UserId]),
   {ok, #state{user_id = UserId}}.
 
@@ -62,7 +72,7 @@ init(UserId) ->
 handle_call({watch, MatchId, Client}, _From, State) ->
   try
     %% First we get current status
-    case match_stream_db:get(MatchId) of
+    case match_stream_db:match(MatchId) of
       not_found ->
         {reply, {error, {not_found, MatchId}}, State, hibernate};
       Match ->

@@ -12,7 +12,7 @@
 
 -include("match_stream.hrl").
 
--define(REDIS_CONNECTIONS, 200).
+-define(REDIS_CONNECTIONS, 1000).
 
 -record(state, {redis :: [pid()]}).
 -opaque state() :: #state{}.
@@ -111,7 +111,7 @@ init([]) ->
 %% @hidden
 -spec handle_call(tuple(), reference(), state()) -> {reply, {ok, term()} | {throw, term()}, state()}.
 handle_call(Request, From, State) ->
-  [RedisConn|Redis] = State#state.redis,
+  [RedisConn|Redis] = lists:reverse(State#state.redis),
   proc_lib:spawn_link(
     fun() ->
             Res =
@@ -124,7 +124,7 @@ handle_call(Request, From, State) ->
               end,
             gen_server:reply(From, Res)
     end),
-  {noreply, State#state{redis = Redis ++ [RedisConn]}}.
+  {noreply, State#state{redis = [RedisConn|lists:reverse(Redis)]}}.
 
 %% @hidden
 -spec handle_cast(_, state()) -> {noreply, state()}.

@@ -234,7 +234,7 @@ handle_call({all, Prefix}, RedisConn) ->
       Ids -> Ids
     end,
   lists:map(fun(<<_:PrefixLength/binary, MatchId/binary>>) -> MatchId end, Res);
-handle_call({history, MatchId}, RedisConn) ->
+handle_call({match_history, MatchId}, RedisConn) ->
   Keys =
     case erldis:keys(RedisConn, "event-" ++ binary_to_list(MatchId) ++ "-*") of
       [] -> [];

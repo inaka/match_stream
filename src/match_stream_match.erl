@@ -12,7 +12,6 @@
 -include("match_stream.hrl").
 
 -record(state, {match_id      :: match_stream:match_id(),
-                event_manager :: pid(),
                 event_mgr_ref :: reference()}).
 -opaque state() :: #state{}.
 
@@ -34,12 +33,9 @@ apply(Event = #match_stream_event{match_id = MatchId}) ->
   gen_server:cast(MatchPid, Event).
 
 %% @doc Returns the gen_event manager for the match
--spec event_manager(match_stream:match_id()) -> pid().
+-spec event_manager(match_stream:match_id()) -> atom().
 event_manager(MatchId) ->
-  case gen_server:call(process(MatchId), event_manager) of
-    Pid when is_pid(Pid) -> Pid;
-    Error -> throw(Error)
-  end.
+  binary_to_atom(<<"match_event_manager@",  MatchId/binary>>, utf8).
 
 %% =================================================================================================
 %% Internal (i.e. used only by other modules) functions
@@ -60,30 +56,31 @@ stop(MatchId) ->
 %% @hidden
 -spec init(match_stream:match_id()) -> {ok, state()}.
 init(MatchId) ->
-  {ok, EventMgr} = gen_event:start_link(),
+  EventMgr =
+    case gen_event:start_link({local, event_manager(MatchId)}) of
+      {ok, P} -> P;
+      {error, {already_started, P}} -> P
+    end,
   EventMgrRef = erlang:monitor(process, EventMgr),
   ?INFO("Match ~s initialized~n", [MatchId]),
   {ok, #state{match_id      = MatchId,
-              event_manager = EventMgr,
               event_mgr_ref = EventMgrRef}}.
 
 %% @hidden
--spec handle_call(event_manager, reference(), state()) -> {reply, pid(), state()}.
-handle_call(event_manager, _From, State) ->
-  {reply, State#state.event_manager, State}.
+-spec handle_call(X, reference(), state()) -> {stop, {unknonw_request, X}, {unknown_request, X}, state()}.
+handle_call(X, _From, State) ->
+  {stop, {unknonw_request, X}, {unknown_request, X}, State}.
 
 %% @hidden
 -spec handle_cast(match_stream:event(), state()) -> {noreply, state()} | {stop, normal, state()}.
 handle_cast(stop, State) ->
-  _ = erlang:demonitor(State#state.event_mgr_ref, [flush]),
-  ok = gen_event:stop(State#state.event_manager),
   {stop, normal, State};
 handle_cast(Event, State) ->
   try
     ok = match_stream_db:update(Event#match_stream_event.match_id,
                                 fun(Match) -> update_match(Match, Event) end),
     ok = match_stream_db:log(Event),
-    ok = gen_event:notify(State#state.event_manager, Event),
+    ok = gen_event:notify(event_manager(State#state.match_id), Event),
     {noreply, State}
   catch
     _:Error ->
@@ -93,16 +90,21 @@ handle_cast(Event, State) ->
 %% @hidden
 -spec handle_info(term(), state()) -> {noreply, state()}.
 handle_info({'DOWN', EventMgrRef, _Type, EventMgr, Info},
-            State = #state{event_manager  = EventMgr,
-                           event_mgr_ref  = EventMgrRef}) ->
+            State = #state{event_mgr_ref  = EventMgrRef}) ->
   ?WARN("Event manager for ~s crashed: ~p. Restarting...~n", [State#state.match_id, Info]),
+  EventMgr =
+    case gen_event:start_link({local, event_manager(State#state.match_id)}) of
+      {ok, P} -> P;
+      {error, {already_started, P}} -> P
+    end,
   EventMgrRef = erlang:monitor(process, EventMgr),
-  {noreply, State#state{event_manager = EventMgr,
-                        event_mgr_ref = EventMgrRef}}.
+  {noreply, State#state{event_mgr_ref = EventMgrRef}}.
 
 %% @hidden
 -spec terminate(term(), state()) -> ok.
-terminate(_, _) -> ok.
+terminate(_, State) ->
+  _ = erlang:demonitor(State#state.event_mgr_ref, [flush]),
+  gen_event:stop(event_manager(State#state.match_id)).
 
 %% @hidden
 -spec code_change(term(), state(), term()) -> {ok, state()}.

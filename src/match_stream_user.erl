@@ -91,7 +91,7 @@ handle_call({watch, MatchId, Client}, _From, State) ->
               undefined;
             _ ->
               ok = match_stream_user_handler:add_handler(MatchId, State#state.user_id, Client),
-              erlang:monitor(process, match_stream_match:event_manager(MatchId))
+              erlang:monitor(process, erlang:whereis(match_stream_match:event_manager(MatchId)))
           end,
         ClientRef = erlang:monitor(process, Client),
         {reply, ok, State#state{matches = [{Client, MatchId, ClientRef, MatchRef} | State#state.matches]}}
@@ -160,8 +160,8 @@ handle_info({'DOWN', Ref, _Type, Client, _Info}, State) ->
 terminate(_, #state{matches = Matches, user_id = Uid}) ->
   lists:foreach(
     fun({Client, MatchId, _, _}) ->
-            _ = match_stream_client:disconnect(Client),
-            _ = match_stream_user_handler:delete_handler(MatchId, Uid, Client)
+            catch match_stream_client:disconnect(Client),
+            catch match_stream_user_handler:delete_handler(MatchId, Uid, Client)
     end, Matches).
 
 %% @hidden

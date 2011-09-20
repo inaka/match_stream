@@ -24,6 +24,7 @@ start_link() ->
 %% @doc  Starts a new client process
 -spec start_user(match_stream:user_id()) -> {ok, pid()} | {error, term()}.
 start_user(User) ->
+  _ = random:seed(erlang:now()),
   Manager =
     list_to_atom("match-stream-user-manager-" ++ integer_to_list(random:uniform(?MANAGERS))),
   supervisor:start_child(Manager, [User]).
@@ -35,7 +36,6 @@ start_user(User) ->
 -spec init([]) -> {ok, {{one_for_one, 5, 10}, [supervisor:child_spec()]}}.
 init([]) ->
   ?INFO("User supervisor initialized~n", []),
-  _ = random:seed(erlang:now()),
   Managers =
     [{list_to_atom("match-stream-user-manager-" ++ integer_to_list(I)),
       {match_stream_user_mgr, start_link,

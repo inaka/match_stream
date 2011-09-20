@@ -64,7 +64,7 @@ wait_for_socket({socket_ready, Socket}, State) ->
       {ok, {_Ip, Port}} -> Port;
       Error -> Error
     end,
-  ?INFO("Client on ~p connected~n", [PeerPort]),
+  ?DEBUG("Client on ~p connected~n", [PeerPort]),
   ok = inet:setopts(Socket, [{active, once}, {packet, 0}, binary]),
   {next_state, wait_for_params, State#state{socket   = Socket,
                                             peerport = PeerPort}};
@@ -108,7 +108,7 @@ running({send, Message}, State = #state{socket = S}) ->
   ok = tcp_send(S, frame(Message), State),
   {next_state, running, State};
 running(disconnect, State) ->
-  ?INFO("Disconnecting from client on ~p...~n", [State#state.peerport]),
+  ?DEBUG("Disconnecting from client on ~p...~n", [State#state.peerport]),
   {stop, normal, State};
 running(Event, State) ->
   ?WARN("Unexpected Event:~n\t~p~n", [Event]),
@@ -135,7 +135,7 @@ handle_info({tcp, Socket, Bin}, StateName, #state{socket = Socket} = StateData) 
     Result;
 handle_info({tcp_closed, Socket}, _StateName, #state{socket = Socket,
                                                      peerport = PeerPort} = StateData) ->
-    ?INFO("Disconnected ~p.~n", [PeerPort]),
+    ?DEBUG("Disconnected ~p.~n", [PeerPort]),
     {stop, normal, StateData};
 handle_info(_Info, StateName, StateData) ->
     {next_state, StateName, StateData}.

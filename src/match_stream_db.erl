@@ -12,7 +12,9 @@
 
 -include("match_stream.hrl").
 
--record(state, {redis :: pid()}).
+-define(REDIS_CONNECTIONS, 200).
+
+-record(state, {redis :: [pid()]}).
 -opaque state() :: #state{}.
 
 -export([create/1, update/2, all/0, get/1, delete/1, log/1, history/1]).
@@ -87,27 +89,33 @@ init([]) ->
               {ok, T} -> T;
               undefined -> 500
             end,
-  {ok, Redis} =
-    case {application:get_env(redis_pwd), application:get_env(redis_db)} of
-      {undefined, undefined} ->
-        erldis_client:start_link();
-      {undefined, {ok, Db}} ->
-        erldis_client:start_link(Db);
-      {{ok, Pwd}, undefined} ->
-        erldis_client:start_link(Host, Port, Pwd);
-      {{ok, Pwd}, {ok, Db}} ->
-        erldis_client:start_link(Host, Port, Pwd, [{timeout, Timeout}], Db)
-    end,
+  Redis =
+    lists:map(
+      fun(_) ->
+              {ok, Conn} =
+                case {application:get_env(redis_pwd), application:get_env(redis_db)} of
+                  {undefined, undefined} ->
+                    erldis_client:start_link();
+                  {undefined, {ok, Db}} ->
+                    erldis_client:start_link(Db);
+                  {{ok, Pwd}, undefined} ->
+                    erldis_client:start_link(Host, Port, Pwd);
+                  {{ok, Pwd}, {ok, Db}} ->
+                    erldis_client:start_link(Host, Port, Pwd, [{timeout, Timeout}], Db)
+                end,
+              Conn
+      end, lists:seq(1, ?REDIS_CONNECTIONS)),
   ?INFO("Database initialized~n", []),
   {ok, #state{redis = Redis}}.
 
 %% @hidden
 -spec handle_call(tuple(), reference(), state()) -> {reply, {ok, term()} | {throw, term()}, state()}.
 handle_call(Request, From, State) ->
+  [RedisConn|Redis] = State#state.redis,
   proc_lib:spawn_link(
     fun() ->
             Res =
-              try handle_call(Request, State) of
+              try handle_call(Request, RedisConn) of
                 ok -> ok;
                 Result -> {ok, Result}
               catch
@@ -116,7 +124,7 @@ handle_call(Request, From, State) ->
               end,
             gen_server:reply(From, Res)
     end),
-  {noreply, State}.
+  {noreply, State#state{redis = Redis ++ [RedisConn]}}.
 
 %% @hidden
 -spec handle_cast(_, state()) -> {noreply, state()}.
@@ -145,63 +153,64 @@ make_call(Call) ->
     {throw, Exception} -> throw(Exception)
   end.
 
-handle_call({create, Match}, State) ->
+-spec handle_call(term(), pid()) -> term().
+handle_call({create, Match}, RedisConn) ->
   Key = <<"match-", (Match#match_stream_match.match_id)/binary>>,
-  case erldis:get(State#state.redis, Key) of
+  case erldis:get(RedisConn, Key) of
     nil ->
-      case erldis:set(State#state.redis, Key, Match) of
+      case erldis:set(RedisConn, Key, Match) of
         ok -> ok;
         Error -> throw(Error)
       end;
     _ ->
       throw(duplicated)
   end;
-handle_call({update, MatchId, UpdateFun}, State) ->
+handle_call({update, MatchId, UpdateFun}, RedisConn) ->
   Key = <<"match-", MatchId/binary>>,
-  case erldis:get(State#state.redis, Key) of
+  case erldis:get(RedisConn, Key) of
     nil ->
       throw(not_found);
     MatchBin ->
-      case erldis:set(State#state.redis, Key, UpdateFun(erlang:binary_to_term(MatchBin))) of
+      case erldis:set(RedisConn, Key, UpdateFun(erlang:binary_to_term(MatchBin))) of
         ok -> ok;
         Error -> throw(Error)
       end
   end;
-handle_call({delete, MatchId}, State) ->
+handle_call({delete, MatchId}, RedisConn) ->
   Key = <<"match-", MatchId/binary>>,
-  _Removed = erldis:del(State#state.redis, Key),
+  _Removed = erldis:del(RedisConn, Key),
   Keys =
-    case erldis:keys(State#state.redis, "event-" ++ binary_to_list(MatchId) ++ "-*") of
+    case erldis:keys(RedisConn, "event-" ++ binary_to_list(MatchId) ++ "-*") of
       [] -> [];
       [Bin1] -> binary:split(Bin1, <<" ">>, [global, trim]);
       Ids -> Ids
     end,
-  _RemovedEvents = erldis:delkeys(State#state.redis, Keys),
+  _RemovedEvents = erldis:delkeys(RedisConn, Keys),
   ok;
-handle_call({log, Event}, State) ->
+handle_call({log, Event}, RedisConn) ->
   MatchKey = <<"match-", (Event#match_stream_event.match_id)/binary>>,
-  case erldis:get(State#state.redis, MatchKey) of
+  case erldis:get(RedisConn, MatchKey) of
     nil ->
       throw(not_found);
     _Match ->
       Key = <<"event-", (Event#match_stream_event.match_id)/binary, $-,
               (list_to_binary(integer_to_list(Event#match_stream_event.timestamp)))/binary>>,
-      case erldis:set(State#state.redis, Key, Event) of
+      case erldis:set(RedisConn, Key, Event) of
         ok -> ok;
         Error -> throw(Error)
       end
   end;
-handle_call(all, State) ->
+handle_call(all, RedisConn) ->
   Res =
-    case erldis:keys(State#state.redis, "match-*") of
+    case erldis:keys(RedisConn, "match-*") of
       [] -> [];
       [Bin1] -> binary:split(Bin1, <<" ">>, [global, trim]);
       Ids -> Ids
     end,
   lists:map(fun(<<"match-", MatchId/binary>>) -> MatchId end, Res);
-handle_call({history, MatchId}, State) ->
+handle_call({history, MatchId}, RedisConn) ->
   Keys =
-    case erldis:keys(State#state.redis, "event-" ++ binary_to_list(MatchId) ++ "-*") of
+    case erldis:keys(RedisConn, "event-" ++ binary_to_list(MatchId) ++ "-*") of
       [] -> [];
       [Bin1] -> binary:split(Bin1, <<" ">>, [global, trim]);
       Ids -> Ids
@@ -210,14 +219,14 @@ handle_call({history, MatchId}, State) ->
     #match_stream_event.timestamp,
     lists:foldl(
       fun(Key, Acc) ->
-              case erldis:get(State#state.redis, Key) of
+              case erldis:get(RedisConn, Key) of
                 nil -> Acc;
                 Bin -> [erlang:binary_to_term(Bin)|Acc]
               end
       end, [], Keys));
-handle_call({get, MatchId}, State) ->
+handle_call({get, MatchId}, RedisConn) ->
   Key = <<"match-", MatchId/binary>>,
-  case erldis:get(State#state.redis, Key) of
+  case erldis:get(RedisConn, Key) of
     nil -> not_found;
     MatchBin -> erlang:binary_to_term(MatchBin)
   end.

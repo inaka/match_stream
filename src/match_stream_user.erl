@@ -54,18 +54,7 @@ start_link(UserId) ->
 %% @hidden
 -spec init(match_stream:user_id()) -> {ok, state()}.
 init(UserId) ->
-  case match_stream_db:user(UserId) of
-    not_found ->
-      match_stream_db:create(#match_stream_user{user_id = UserId});
-    _User ->
-      match_stream_db:user_update(
-        UserId,
-        fun(#match_stream_user{visit_count = V} = User) ->
-                User#match_stream_user{visit_count = V + 1}
-        end)
-  end,
-  ?INFO("User ~s initialized~n", [UserId]),
-  {ok, #state{user_id = UserId}}.
+  {ok, #state{user_id = UserId}, 0}.
 
 %% @hidden
 -spec handle_call({watch, match_stream:match_id(), pid()}, reference(), state()) -> {reply, ok | {error, term()}, state(), hibernate}.
@@ -134,6 +123,18 @@ handle_cast(Event, State) ->
 
 %% @hidden
 -spec handle_info(term(), state()) -> {noreply, state(), hibernate} | {stop, normal, state()}.
+handle_info(timeout, State) ->
+  case match_stream_db:user(State#state.user_id) of
+    not_found ->
+      match_stream_db:create(#match_stream_user{user_id = State#state.user_id});
+    _User ->
+      match_stream_db:user_update(
+        State#state.user_id,
+        fun(#match_stream_user{visit_count = V} = User) ->
+                User#match_stream_user{visit_count = V + 1}
+        end)
+  end,
+  {noreply, State, hibernate};
 handle_info({'DOWN', Ref, _Type, Pid, _Info}, State) ->
   case lists:keytake(Ref, 3, State#state.matches) of
     {value, {Pid, MatchId, Ref, MatchRef}, OtherMatches} ->

@@ -47,6 +47,7 @@ sudo sh -c 'iptables-save > /etc/iptables.rules'
 git clone git@github.com:inaka/match_stream.git
 
 # compiling
+cd match_stream
 make
 
 # Increase the max opened files limit:

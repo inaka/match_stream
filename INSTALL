@@ -1,0 +1,55 @@
+# basic installs
+sudo aptitude update
+sudo aptitude safe-upgrade
+sudo aptitude install git-core build-essential libncurses5-dev m4 openssl libssl-dev tcl8.5
+
+# install redis 2.2.13
+wget http://redis.googlecode.com/files/redis-2.2.13.tar.gz
+tar xzf redis-2.2.13.tar.gz
+cd redis-2.2.13
+make
+sudo make install
+cd ..
+echo "Remember to add proper configuration parameters to Redis"
+# Add the following lines to redis conf. file:
+# timeout 0
+# appendonly yes
+
+# erlang install
+wget http://www.erlang.org/download/otp_src_R14B03.tar.gz
+tar -xzvf otp_src_R14B03.tar.gz
+cd otp_src_R14B03
+./configure --enable-smp-support --enable-kernel-poll --enable-hipe --enable-threads
+make
+sudo make install
+cd
+
+# public key stuff
+ssh-keygen -t rsa -C "your@mail.com" # or your mail
+cat .ssh/id_rsa.pub
+### Add this key to github.com/account
+### Add the INSTALL_PUBLIC_KEYS to the server as .ssh/authorized_keys
+chmod 600 .ssh/authorized_keys
+
+# rebar
+git clone git://github.com/basho/rebar.git
+cd rebar
+./bootstrap
+chmod u+x rebar
+sudo mv rebar /usr/bin
+
+# opening ports
+sudo iptables -A INPUT -p tcp --dport 9999 -j ACCEPT
+sudo iptables -A INPUT -p tcp --dport 8888 -j ACCEPT
+sudo sh -c 'iptables-save > /etc/iptables.rules'
+
+# repo cloning
+git clone git@github.com:inaka/match_stream.git
+
+# compiling
+make
+
+# Increase the max opened files limit:
+sudo su - 
+ulimit -n 999999
+su - tunein #the current user

@@ -12,7 +12,7 @@
 
 -include("match_stream.hrl").
 
--define(REDIS_CONNECTIONS, 1000).
+-define(REDIS_CONNECTIONS, 100).
 
 -record(state, {redis :: [pid()]}).
 -opaque state() :: #state{}.

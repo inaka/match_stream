@@ -11,7 +11,7 @@
 
 -behaviour(supervisor).
 
--export([start_link/0, start_user/1, init/1]).
+-export([start_link/0, start_user/1, init/1, count_users/0]).
 
 %% ====================================================================
 %% External functions
@@ -28,6 +28,20 @@ start_user(User) ->
   Manager =
     list_to_atom("match-stream-user-manager-" ++ integer_to_list(random:uniform(?MANAGERS))),
   supervisor:start_child(Manager, [User]).
+
+%% @doc  Returns the count of reigstered users under the supervision of this process
+-spec count_users() -> non_neg_integer().
+count_users() ->
+  lists:sum(
+    lists:map(
+      fun(I) ->
+              proplists:get_value(
+                active,
+                supervisor:count_children(
+                  list_to_atom("match-stream-user-manager-" ++ integer_to_list(I))),
+                0)
+      end, lists:seq(1, ?MANAGERS))).
+
 
 %% ====================================================================
 %% Server functions

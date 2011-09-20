@@ -72,7 +72,7 @@ handle_call(X, _From, State) ->
   {stop, {unknonw_request, X}, {unknown_request, X}, State}.
 
 %% @hidden
--spec handle_cast(match_stream:event(), state()) -> {noreply, state()} | {stop, normal, state()}.
+-spec handle_cast(match_stream:event(), state()) -> {noreply, state(), hibernate} | {stop, normal, state()}.
 handle_cast(stop, State) ->
   {stop, normal, State};
 handle_cast(Event, State) ->
@@ -81,14 +81,14 @@ handle_cast(Event, State) ->
                                 fun(Match) -> update_match(Match, Event) end),
     ok = match_stream_db:log(Event),
     ok = gen_event:notify(event_manager(State#state.match_id), Event),
-    {noreply, State}
+    {noreply, State, hibernate}
   catch
     _:Error ->
       {stop, Error, State}
   end.
 
 %% @hidden
--spec handle_info(term(), state()) -> {noreply, state()}.
+-spec handle_info(term(), state()) -> {noreply, state(), hibernate}.
 handle_info({'DOWN', EventMgrRef, _Type, EventMgr, Info},
             State = #state{event_mgr_ref  = EventMgrRef}) ->
   ?WARN("Event manager for ~s crashed: ~p. Restarting...~n", [State#state.match_id, Info]),
@@ -98,7 +98,7 @@ handle_info({'DOWN', EventMgrRef, _Type, EventMgr, Info},
       {error, {already_started, P}} -> P
     end,
   EventMgrRef = erlang:monitor(process, EventMgr),
-  {noreply, State#state{event_mgr_ref = EventMgrRef}}.
+  {noreply, State#state{event_mgr_ref = EventMgrRef}, hibernate}.
 
 %% @hidden
 -spec terminate(term(), state()) -> ok.

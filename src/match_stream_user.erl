@@ -58,13 +58,13 @@ init(UserId) ->
   {ok, #state{user_id = UserId}}.
 
 %% @hidden
--spec handle_call({watch, match_stream:match_id(), pid()}, reference(), state()) -> {reply, ok | {error, term()}, state()}.
+-spec handle_call({watch, match_stream:match_id(), pid()}, reference(), state()) -> {reply, ok | {error, term()}, state(), hibernate}.
 handle_call({watch, MatchId, Client}, _From, State) ->
   try
     %% First we get current status
     case match_stream_db:get(MatchId) of
       not_found ->
-        {reply, {error, {not_found, MatchId}}, State};
+        {reply, {error, {not_found, MatchId}}, State, hibernate};
       Match ->
         MatchStatus =
           #match_stream_event{timestamp = match_stream:timestamp(),
@@ -94,17 +94,19 @@ handle_call({watch, MatchId, Client}, _From, State) ->
               erlang:monitor(process, erlang:whereis(match_stream_match:event_manager(MatchId)))
           end,
         ClientRef = erlang:monitor(process, Client),
-        {reply, ok, State#state{matches = [{Client, MatchId, ClientRef, MatchRef} | State#state.matches]}}
+        {reply, ok,
+         State#state{matches = [{Client, MatchId, ClientRef, MatchRef} | State#state.matches]},
+         hibernate}
     end
   catch
     _:Error ->
       ?WARN("~s couldn't subscribe to ~s: ~p~n", [State#state.user_id, MatchId, Error]),
       ok = match_stream_client:send(Client, "ERROR: Couldn't subscribe to match.\n"),
-      {reply, {error, Error}, State}
+      {reply, {error, Error}, State, hibernate}
   end.
 
 %% @hidden
--spec handle_cast(match_stream:event(), state()) -> {noreply, state()}.
+-spec handle_cast(match_stream:event(), state()) -> {noreply, state(), hibernate}.
 handle_cast(Event, State) ->
   MatchId = Event#match_stream_event.match_id,
   lists:foreach(
@@ -118,10 +120,10 @@ handle_cast(Event, State) ->
     lists:filter(
       fun({_, M, _, _}) -> M == MatchId end,
       State#state.matches)),
-  {noreply, State}.
+  {noreply, State, hibernate}.
 
 %% @hidden
--spec handle_info(term(), state()) -> {noreply, state()} | {stop, normal, state()}.
+-spec handle_info(term(), state()) -> {noreply, state(), hibernate} | {stop, normal, state()}.
 handle_info({'DOWN', Ref, _Type, Pid, _Info}, State) ->
   case lists:keytake(Ref, 3, State#state.matches) of
     {value, {Pid, MatchId, Ref, MatchRef}, OtherMatches} ->
@@ -136,7 +138,7 @@ handle_info({'DOWN', Ref, _Type, Pid, _Info}, State) ->
         [] -> %% It was the last match
           {stop, normal, State#state{matches = []}};
         OtherMatches ->
-          {noreply, State#state{matches = OtherMatches}}
+          {noreply, State#state{matches = OtherMatches}, hibernate}
       end;
     false ->
       case lists:keytake(Ref, 4, State#state.matches) of
@@ -148,10 +150,10 @@ handle_info({'DOWN', Ref, _Type, Pid, _Info}, State) ->
             [] -> %% It was the last match
               {stop, normal, State#state{matches = []}};
             OtherMatches ->
-              {noreply, State#state{matches = OtherMatches}}
+              {noreply, State#state{matches = OtherMatches}, hibernate}
           end;
         false ->
-          {noreply, State}
+          {noreply, State, hibernate}
       end
   end.
 

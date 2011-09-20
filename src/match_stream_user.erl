@@ -122,11 +122,11 @@ handle_cast(Event, State) ->
 
 %% @hidden
 -spec handle_info(term(), state()) -> {noreply, state()} | {stop, normal, state()}.
-handle_info({'DOWN', Ref, _Type, Client, _Info}, State) ->
+handle_info({'DOWN', Ref, _Type, Pid, _Info}, State) ->
   case lists:keytake(Ref, 3, State#state.matches) of
-    {value, {Client, MatchId, Ref, MatchRef}, OtherMatches} ->
+    {value, {Pid, MatchId, Ref, MatchRef}, OtherMatches} ->
       try
-        _ = match_stream_user_handler:delete_handler(MatchId, State#state.user_id, Client),
+        _ = match_stream_user_handler:delete_handler(MatchId, State#state.user_id, Pid),
         _ = erlang:demonitor(MatchRef, [flush])
       catch
         _:Error ->

@@ -77,6 +77,9 @@ handle_cast(stop, State) ->
   {stop, normal, State};
 handle_cast(Event, State) ->
   try
+    ?INFO("~p on ~s (~p clients)~n", [Event#match_stream_event.kind,
+                                      Event#match_stream_event.match_id,
+                                      length(gen_event:which_handlers(event_manager(Event#match_stream_event.match_id)))]),
     ok = match_stream_db:match_update(Event#match_stream_event.match_id,
                                 fun(Match) -> update_match(Match, Event) end),
     ok = match_stream_db:event_log(Event),

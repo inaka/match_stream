@@ -84,7 +84,7 @@ loop(Req) ->
       Msg = io_lib:format("500 Runtime error - ~p ~n", [Error]),
       Req:respond({500, ?TEXT_HEADERS, Msg})
   end,
-  ?STAT("~p: ~p - ~p ms~n", [Req:get(method), Path, match_stream:timestamp() - Prev]),
+  ?DEBUG("~p: ~p - ~p ms~n", [Req:get(method), Path, match_stream:timestamp() - Prev]),
   ok.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

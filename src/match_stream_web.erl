@@ -10,7 +10,7 @@
 
 -include("match_stream.hrl").
 
--export([start_link/0, loop/1]).
+-export([start_link/1, loop/1]).
 
 -define(VERSION, "1").
 -define(BASE_HEADERS, [{"Access-Control-Allow-Origin",  "*"},
@@ -21,14 +21,12 @@
 -define(TEXT_HEADERS, [{"Content-Type", "text/plain; charset=utf-8"} | ?BASE_HEADERS]).
 
 %% @private
--spec start_link() -> {ok, pid()}.
-start_link() ->
-  Port = case application:get_env(web_port) of
-           undefined -> 8888;
-           {ok, P} -> P
-         end,
+-spec start_link(pos_integer()) -> {ok, pid()}.
+start_link(Port) ->
   ?INFO("Web player handler starting on port ~p~n", [Port]),
-  mochiweb_http:start([{name, ?MODULE}, {loop, {?MODULE, loop}}, {backlog, 128000}, {port, Port}]).
+  mochiweb_http:start(
+    [{name, list_to_atom("match-stream-web-" ++ integer_to_list(Port))},
+     {loop, {?MODULE, loop}}, {backlog, 128000}, {port, Port}]).
 
 %% @private
 -spec loop(atom() | tuple()) -> ok.
@@ -38,6 +36,17 @@ loop(Req) ->
   Prev = match_stream:timestamp(),
   try
     case {Req:get(method), string:tokens(Path, "/")} of
+      {'GET',  [?VERSION, "checkin" | _RestOfPath]} ->
+        _ = random:seed(erlang:now()),
+        {MinPort, MaxPort} =
+          case application:get_env(listener_port_range) of
+            {ok, Ports} -> Ports;
+            undefined -> {9999,9999}
+          end,
+        Checkin = {struct, [{<<"port">>, MinPort - 1 + random:uniform(MaxPort - MinPort + 1)}]},
+        Req:ok({_ContentType = "application/json", _Headers = ?BASE_HEADERS,
+                mochijson2:encode(Checkin)});
+
       {'GET',  [?VERSION, "matches" | _RestOfPath]} ->
         Matches = match_stream:matches(),
         Req:ok({_ContentType = "application/json", _Headers = ?BASE_HEADERS,

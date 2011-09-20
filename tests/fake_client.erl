@@ -1,11 +1,15 @@
 -module(fake_client).
 
--export([watch/4, watch/6]).
+-export([watch/4, watch/5]).
 
 %% @doc Spawn links N watchers
--spec watch(pos_integer(), pos_integer(), inet:ip_address() | inet:hostname(), pos_integer(), match_stream:user_id(), match_stream:match_id()) -> {non_neg_integer(), non_neg_integer()}.
-watch(N, C, Server, Port, UserIdPrefix, MatchId) ->
+-spec watch(pos_integer(), pos_integer(), inet:ip_address() | inet:hostname(), match_stream:user_id(), match_stream:match_id()) -> {non_neg_integer(), non_neg_integer()}.
+watch(N, C, Server, UserIdPrefix, MatchId) ->
   Self = self(),
+  Ports = case application:get_env(listener_port_range) of
+            {ok, {Min, Max}} -> lists:seq(Min, Max);
+            undefined -> [9999]
+          end,
   lists:foreach(
     fun(I) ->
             io:format("Starting clients ~p to ~p...~n", [I+1, I+C]),
@@ -13,6 +17,7 @@ watch(N, C, Server, Port, UserIdPrefix, MatchId) ->
               fun(IC) ->
                       UserId = <<UserIdPrefix/binary, $.,
                                  (list_to_binary(integer_to_list(IC)))/binary>>,
+                      Port = lists:nth(1 + IC rem length(Ports), Ports),
                       proc_lib:spawn_link(
                         fun() ->
                                 try

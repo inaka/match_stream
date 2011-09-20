@@ -15,7 +15,7 @@
 %% -------------------------------------------------------------------
 %% Exported functions
 %% -------------------------------------------------------------------
--export([start_link/0]).
+-export([start_link/1]).
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 
 -define(TCP_OPTIONS,[binary,
@@ -38,13 +38,11 @@
 %% ====================================================================
 
 %% @doc  Starts a new client listener
--spec start_link() -> {ok, pid()}.
-start_link() -> 
-  Port = case application:get_env(port) of
-           undefined -> 9999;
-           {ok, P} -> P
-         end,
-  gen_server:start_link({local, ?MODULE}, ?MODULE, Port, []).
+-spec start_link(pos_integer()) -> {ok, pid()}.
+start_link(Port) -> 
+  gen_server:start_link(
+    {local, list_to_atom("match-stream-client-listener-" ++ integer_to_list(Port))},
+    ?MODULE, Port, []).
 
 %% ====================================================================
 %% Callback functions

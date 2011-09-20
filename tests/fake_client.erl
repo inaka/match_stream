@@ -6,7 +6,7 @@
 -spec watch(pos_integer(), pos_integer(), inet:ip_address() | inet:hostname(), match_stream:user_id(), match_stream:match_id()) -> {non_neg_integer(), non_neg_integer()}.
 watch(N, C, Server, UserIdPrefix, MatchId) ->
   Self = self(),
-  Ports = case application:get_env(listener_port_range) of
+  Ports = case application:get_env(match_stream, listener_port_range) of
             {ok, {Min, Max}} -> lists:seq(Min, Max);
             undefined -> [9999]
           end,

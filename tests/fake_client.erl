@@ -72,7 +72,7 @@ loop(Socket, [{Event, complete}|Events]) ->
           throw({invalid_header, Msg})
       end;
     {tcp_closed, Socket} ->
-      io:format("~p closed~n", [self()]),
+      io:format("~p closed. Last event: ~s~n", [self(), Event]),
       case Event of
         <<"stop">> -> ok;
         <<"status">> -> ok;

@@ -30,7 +30,7 @@ create(Object = #match_stream_user{user_id = UserId}) ->
 %% @throws not_found
 -spec match_update(match_stream:match_id(), fun((match_stream:match()) -> match_stream:match())) -> ok.
 match_update(MatchId, UpdateFun) ->
-  make_call(write, {update, <<"match-", MatchId/binary>>, UpdateFun}).
+  make_call(write_once, {update, <<"match-", MatchId/binary>>, UpdateFun}).
 
 %% @doc Updates an existing user
 %% @throws not_found
@@ -62,8 +62,8 @@ user(UserId) ->
 %% Silently ignores the call if the match is not there
 -spec match_delete(match_stream:match_id()) -> ok.
 match_delete(MatchId) ->
-  make_call(write, {delete, <<"match-", MatchId/binary>>}),
-  make_call(write, {delete_events, MatchId}).
+  make_call(write_once, {delete, <<"match-", MatchId/binary>>}),
+  make_call(write_once, {delete_events, MatchId}).
 
 %% @doc Deletes an user.
 %% Silently ignores the call if the user is not there
@@ -75,7 +75,7 @@ user_delete(UserId) ->
 %% @throws not_found
 -spec event_log(match_stream:event()) -> ok.
 event_log(Event) ->
-  make_call(write, {log, Event}).
+  make_call(write_once, {log, Event}).
 
 %% @doc Returns match events
 -spec match_history(match_stream:match_id()) -> [match_stream:event()].
@@ -108,9 +108,14 @@ init([]) ->
 %% =================================================================================================
 -spec make_call(read|write, tuple()) -> ok | not_found | match_stream:match().
 make_call(Type, Call) ->
-  Module =
-    case Type of
-      read -> match_stream_db_reader;
-      write -> match_stream_db_writer
-    end,
-  Module:make_call(Call).
+  case Type of
+    read -> match_stream_db_reader:make_call(Call);
+    write -> match_stream_db_writer:make_call(Call);
+    write_once ->
+      case {node(), node(global:safe_whereis_name(match_stream_db_writer))} of
+        {Here, Here} ->
+          match_stream_db_writer:make_call(Call);
+        {_, _} -> %%HACK: It will be written by the local node, no need to call it from here too
+          ok
+      end
+  end.

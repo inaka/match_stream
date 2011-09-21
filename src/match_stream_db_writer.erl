@@ -17,7 +17,7 @@
 -record(state, {redis :: [pid()]}).
 -opaque state() :: #state{}.
 
--export([start_link/0]).
+-export([start_link/0, make_call/1]).
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 
 %% =================================================================================================
@@ -32,6 +32,11 @@ start_link() ->
       link(Pid),
       {ok, Pid}
   end.
+
+%% @hidden
+-spec make_call(tuple()) -> ok.
+make_call(Call) ->
+  gen_server:cast({global, ?MODULE}, Call).
 
 %% =================================================================================================
 %% Server functions
@@ -71,26 +76,23 @@ init([]) ->
   {ok, #state{redis = Redis}}.
 
 %% @hidden
--spec handle_call(tuple(), reference(), state()) -> {reply, {ok, term()} | {throw, term()}, state()}.
-handle_call(Request, From, State) ->
-  [RedisConn|Redis] = lists:reverse(State#state.redis),
-  proc_lib:spawn_link(
-    fun() ->
-            Res =
-              try handle_call(Request, RedisConn) of
-                ok -> ok;
-                Result -> {ok, Result}
-              catch
-                throw:Error ->
-                  {throw, Error}
-              end,
-            gen_server:reply(From, Res)
-    end),
-  {noreply, State#state{redis = [RedisConn|lists:reverse(Redis)]}}.
+%% @hidden
+-spec handle_call(X, reference(), #state{}) -> {stop, {unknown_request, X}, {unknown_request, X}, #state{}}.
+handle_call(Request, _From, State) ->
+  {stop, {unknown_request, Request}, {unknown_request, Request}, State}.
 
 %% @hidden
 -spec handle_cast(_, state()) -> {noreply, state()}.
-handle_cast(_, State) -> {noreply, State}.
+handle_cast(Request, State) ->
+  [RedisConn|Redis] = lists:reverse(State#state.redis),
+  try handle_call(Request, RedisConn) of
+    ok ->
+      {noreply, State#state{redis = [RedisConn|lists:reverse(Redis)]}}
+  catch
+    throw:Error ->
+      ?ERROR("Error trying to process write request:~n\tReq:\t~p~nError:\t~p~n", [Request, Error]),
+      {stop, Error, State}
+  end.
 
 %% @hidden
 -spec handle_info(term(), state()) -> {noreply, state()}.

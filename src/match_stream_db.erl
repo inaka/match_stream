@@ -108,13 +108,9 @@ init([]) ->
 %% =================================================================================================
 -spec make_call(read|write, tuple()) -> ok | not_found | match_stream:match().
 make_call(Type, Call) ->
-  Process =
+  Module =
     case Type of
       read -> match_stream_db_reader;
-      write -> {global, match_stream_db_writer}
+      write -> match_stream_db_writer
     end,
-  case gen_server:call(Process, Call) of
-    ok -> ok;
-    {ok, Result} -> Result;
-    {throw, Exception} -> throw(Exception)
-  end.
+  Module:make_call(Call).

@@ -17,7 +17,7 @@
 -record(state, {redis :: [pid()]}).
 -opaque state() :: #state{}.
 
--export([start_link/0]).
+-export([start_link/0, make_call/1]).
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 
 %% =================================================================================================
@@ -27,6 +27,14 @@
 -spec start_link() -> {ok, pid()}.
 start_link() ->
   gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
+
+%% @hidden
+-spec make_call(tuple()) -> term().
+make_call(Call) ->
+  case gen_server:call(?MODULE, Call) of
+    {ok, Result} -> Result;
+    {throw, Exception} -> throw(Exception)
+  end.
 
 %% =================================================================================================
 %% Server functions

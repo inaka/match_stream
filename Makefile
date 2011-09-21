@@ -1,4 +1,4 @@
-RUN := +P 99999999 +Bc +K true -smp enable -pa ebin deps/*/ebin -s crypto -s inets -s ssl -s elog
+RUN := +P 99999999 +Bc +K true -smp enable -pa ebin deps/*/ebin -s crypto -s inets -s ssl -s elog ${ERLARGS} 
 
 all:
 	rebar get-deps && rebar compile
@@ -22,22 +22,10 @@ xref: all
 	rebar skip_deps=true xref
 	
 run: all
-	if [ -f app.config ]; then\
-		erl  -name match_stream -config app -boot start_sasl ${RUN} -s match_stream;\
-	else\
-		erl  -name match_stream -boot start_sasl ${RUN} -s match_stream;\
-	fi
+	erl  -boot start_sasl ${RUN} -s match_stream
 
 shell: all
-	if [ -f app.config ]; then\
-		erl  -config app -boot start_sasl ${RUN};\
-	else\
-		erl  -boot start_sasl ${RUN};\
-	fi
+	erl  -boot start_sasl ${RUN}
 
 test: all
-	if [ -f app.config ]; then\
-		erl -noshell -noinput -config app ${RUN} -run match_stream_tests main;\
-	else\
-		erl -noshell -noinput ${RUN} -run match_stream_tests main;\
-	fi
+	erl -noshell -noinput ${RUN} -run match_stream_tests main

@@ -19,7 +19,7 @@
 %% @doc  Starts the supervisor process
 -spec start_link() -> ignore | {error, term()} | {ok, pid()}.
 start_link() ->
-	supervisor:start_link({local, ?MODULE}, ?MODULE, []).
+  supervisor:start_link({local, ?MODULE}, ?MODULE, []).
 
 %% @doc  Starts a new client process
 -spec start_user(match_stream:user_id()) -> {ok, pid()} | {error, term()}.
@@ -41,7 +41,6 @@ count_users() ->
                   list_to_atom("match-stream-user-manager-" ++ integer_to_list(I))),
                 0)
       end, lists:seq(1, ?MANAGERS))).
-
 
 %% ====================================================================
 %% Server functions

@@ -45,6 +45,6 @@ init([]) ->
   MatchSup = {match_stream_match_sup, {match_stream_match_sup, start_link, []},
              permanent, 1000, supervisor, [match_stream_match_sup]},
   MatchDb = {match_stream_db, {match_stream_db, start_link, []},
-              permanent, 1000, worker, [match_stream_db]},
+              permanent, 1000, supervisor, [match_stream_db]},
   ?INFO("Main supervisor initialized~n", []),
   {ok, {{one_for_one, 5, 10}, [MatchDb, Listener, MatchWeb, MatchSup, UserSup, ClientSup]}}.

@@ -76,7 +76,6 @@ init([]) ->
   {ok, #state{redis = Redis}}.
 
 %% @hidden
-%% @hidden
 -spec handle_call(X, reference(), #state{}) -> {stop, {unknown_request, X}, {unknown_request, X}, #state{}}.
 handle_call(Request, _From, State) ->
   {stop, {unknown_request, Request}, {unknown_request, Request}, State}.

@@ -106,7 +106,7 @@ cancel_match(Home, Visit, StartDate) ->
 %% @doc Cancels a match
 -spec cancel_match(match_id()) -> ok.
 cancel_match(MatchId) ->
-  match_stream_match:stop(MatchId),
+  match_stream_match_sup:stop_match(MatchId),
   match_stream_db:match_delete(MatchId).
 
 %% @doc Something happened in a match

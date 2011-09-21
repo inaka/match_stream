@@ -25,14 +25,12 @@
 %% @doc Registers an event in the match
 -spec apply(match_stream:event()) -> ok.
 apply(Event = #match_stream_event{match_id = MatchId}) ->
-  MatchPid =
-    case match_stream_match_sup:start_match(MatchId) of
-      {ok, Pid} -> Pid;
-      {error, {already_started, Pid}} -> Pid
-    end,
-  gen_server:cast(MatchPid, Event).
+  lists:foreach(
+    fun(MatchPid) ->
+            gen_server:cast(MatchPid, Event)
+    end, match_stream_match_sup:match_pids(MatchId)).
 
-%% @doc Returns the gen_event manager for the match
+%% @doc Returns the gen_event manager for the closest match process
 -spec event_manager(match_stream:match_id()) -> atom().
 event_manager(MatchId) ->
   binary_to_atom(<<"match_event_manager@",  MatchId/binary>>, utf8).

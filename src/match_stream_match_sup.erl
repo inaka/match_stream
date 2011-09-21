@@ -10,7 +10,7 @@
 
 -behaviour(supervisor).
 
--export([start_link/0, start_match/1, init/1]).
+-export([start_link/0, match_pids/1, stop_match/1, init/1]).
 
 %% ====================================================================
 %% External functions
@@ -18,12 +18,43 @@
 %% @doc  Starts the supervisor process
 -spec start_link() -> ignore | {error, term()} | {ok, pid()}.
 start_link() ->
-	supervisor:start_link({local, ?MODULE}, ?MODULE, []).
+  %% First of all we create/join the group of all supervisors...
+  ok = pg2:create(?MODULE),
+  Pid = case supervisor:start_link({local, ?MODULE}, ?MODULE, []) of
+          {ok, P} -> P;
+          {error, {already_started, P}} -> P
+        end,
+  %% Then we join it...
+  ok = pg2:join(?MODULE, Pid),
+  {ok, Pid}.
 
-%% @doc  Starts a new client process
--spec start_match(match_stream:match_id()) -> {ok, pid()} | {error, term()}.
-start_match(Match) ->
-  supervisor:start_child(?MODULE, [Match]).
+%% @doc  Returns the list of processes related to that match.
+%%       Starts a new match process in every node if not already there 
+-spec match_pids(match_stream:match_id()) -> [pid()].
+match_pids(Match) ->
+  case pg2:get_members(?MODULE) of
+    {error, Reason} -> throw(Reason);
+    Sups ->
+      lists:map(
+        fun(Sup) ->
+                case supervisor:start_child(Sup, [Match]) of
+                  {ok, P} -> P;
+                  {error, {already_started, P}} -> P
+                end
+        end, Sups)
+  end.
+
+%% @doc  Stops a match process
+-spec stop_match(match_stream:match_id()) -> ok.
+stop_match(MatchId) ->
+  case pg2:get_members(?MODULE) of
+    {error, Reason} -> throw(Reason);
+    Sups ->
+      lists:foreach(
+        fun(Sup) ->
+                rpc:call(node(Sup), match_stream_match, stop, [MatchId])
+        end, Sups)
+  end.
 
 %% ====================================================================
 %% Server functions

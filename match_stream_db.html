@@ -9,67 +9,92 @@
 <hr>
 
 <h1>Module match_stream_db</h1>
-<ul class="index"><li><a href="#description">Description</a></li><li><a href="#index">Function Index</a></li><li><a href="#functions">Function Details</a></li></ul>Match Stream Database.
+<ul class="index"><li><a href="#description">Description</a></li><li><a href="#index">Function Index</a></li><li><a href="#functions">Function Details</a></li></ul>Match Stream Database main interface.
 <p>Copyright © (C) 2011 Inaka Labs SRL</p>
 
-<p><b>Behaviours:</b> <a href="gen_server.html"><tt>gen_server</tt></a>.</p>
+<p><b>Behaviours:</b> <a href="supervisor.html"><tt>supervisor</tt></a>.</p>
 <p><b>Authors:</b> Fernando Benavides (<a href="mailto:fernando.benavides@inakanetworks.com"><tt>fernando.benavides@inakanetworks.com</tt></a>).</p>
 
-<h2><a name="description">Description</a></h2>Match Stream Database.
-   It uses a Redis backend.
+<h2><a name="description">Description</a></h2>Match Stream Database main interface.
 <h2><a name="index">Function Index</a></h2>
-<table width="100%" border="1" cellspacing="0" cellpadding="2" summary="function index"><tr><td valign="top"><a href="#all-0">all/0</a></td><td>Returns the list of available matches.</td></tr>
-<tr><td valign="top"><a href="#create-1">create/1</a></td><td>Creates a match.</td></tr>
-<tr><td valign="top"><a href="#delete-1">delete/1</a></td><td>Deletes a match.</td></tr>
-<tr><td valign="top"><a href="#get-1">get/1</a></td><td>Returns a match.</td></tr>
-<tr><td valign="top"><a href="#history-1">history/1</a></td><td>Returns match events.</td></tr>
-<tr><td valign="top"><a href="#log-1">log/1</a></td><td>Logs an event.</td></tr>
-<tr><td valign="top"><a href="#update-2">update/2</a></td><td>Updates an existing match.</td></tr>
+<table width="100%" border="1" cellspacing="0" cellpadding="2" summary="function index"><tr><td valign="top"><a href="#create-1">create/1</a></td><td>Creates a match or an user.</td></tr>
+<tr><td valign="top"><a href="#event_log-1">event_log/1</a></td><td>Logs an event.</td></tr>
+<tr><td valign="top"><a href="#match-1">match/1</a></td><td>Returns a match.</td></tr>
+<tr><td valign="top"><a href="#match_all-0">match_all/0</a></td><td>Returns the list of available matches.</td></tr>
+<tr><td valign="top"><a href="#match_delete-1">match_delete/1</a></td><td>Deletes a match.</td></tr>
+<tr><td valign="top"><a href="#match_history-1">match_history/1</a></td><td>Returns match events.</td></tr>
+<tr><td valign="top"><a href="#match_update-2">match_update/2</a></td><td>Updates an existing match.</td></tr>
+<tr><td valign="top"><a href="#user-1">user/1</a></td><td>Returns an user.</td></tr>
+<tr><td valign="top"><a href="#user_all-0">user_all/0</a></td><td>Returns the list of available users.</td></tr>
+<tr><td valign="top"><a href="#user_delete-1">user_delete/1</a></td><td>Deletes an user.</td></tr>
+<tr><td valign="top"><a href="#user_update-2">user_update/2</a></td><td>Updates an existing user.</td></tr>
 </table>
 
 <h2><a name="functions">Function Details</a></h2>
 
-<h3 class="function"><a name="all-0">all/0</a></h3>
-<div class="spec">
-<p><tt>all() -&gt; [<a href="match_stream.html#type-match_id">match_stream:match_id()</a>]</tt><br></p>
-</div><p>Returns the list of available matches</p>
-
 <h3 class="function"><a name="create-1">create/1</a></h3>
 <div class="spec">
-<p><tt>create(Match::<a href="match_stream.html#type-match">match_stream:match()</a>) -&gt; ok</tt><br></p>
+<p><tt>create(Object::<a href="match_stream.html#type-match">match_stream:match()</a> | <a href="match_stream.html#type-user">match_stream:user()</a>) -&gt; ok</tt><br></p>
 </div><p>throws <tt>duplicated</tt></p>
-<p>Creates a match</p>
+<p>Creates a match or an user</p>
 
-<h3 class="function"><a name="delete-1">delete/1</a></h3>
+<h3 class="function"><a name="event_log-1">event_log/1</a></h3>
 <div class="spec">
-<p><tt>delete(MatchId::<a href="match_stream.html#type-match_id">match_stream:match_id()</a>) -&gt; ok</tt><br></p>
-</div><p>Deletes a match.
-  Silently ignores the call if the match is not there</p>
-
-<h3 class="function"><a name="get-1">get/1</a></h3>
-<div class="spec">
-<p><tt>get(MatchId::<a href="match_stream.html#type-match_id">match_stream:match_id()</a>) -&gt; <a href="match_stream.html#type-match">match_stream:match()</a> | not_found</tt><br></p>
-</div><p>Returns a match</p>
-
-<h3 class="function"><a name="history-1">history/1</a></h3>
-<div class="spec">
-<p><tt>history(MatchId::<a href="match_stream.html#type-match_id">match_stream:match_id()</a>) -&gt; [<a href="match_stream.html#type-event">match_stream:event()</a>]</tt><br></p>
-</div><p>Returns match events</p>
-
-<h3 class="function"><a name="log-1">log/1</a></h3>
-<div class="spec">
-<p><tt>log(Event::<a href="match_stream.html#type-event">match_stream:event()</a>) -&gt; ok</tt><br></p>
+<p><tt>event_log(Event::<a href="match_stream.html#type-event">match_stream:event()</a>) -&gt; ok</tt><br></p>
 </div><p>throws <tt>not_found</tt></p>
 <p>Logs an event</p>
 
-<h3 class="function"><a name="update-2">update/2</a></h3>
+<h3 class="function"><a name="match-1">match/1</a></h3>
 <div class="spec">
-<p><tt>update(MatchId::<a href="match_stream.html#type-match_id">match_stream:match_id()</a>, UpdateFun::fun((<a href="match_stream.html#type-match">match_stream:match()</a>) -&gt; <a href="match_stream.html#type-match">match_stream:match()</a>)) -&gt; ok</tt><br></p>
+<p><tt>match(MatchId::<a href="match_stream.html#type-match_id">match_stream:match_id()</a>) -&gt; <a href="match_stream.html#type-match">match_stream:match()</a> | not_found</tt><br></p>
+</div><p>Returns a match</p>
+
+<h3 class="function"><a name="match_all-0">match_all/0</a></h3>
+<div class="spec">
+<p><tt>match_all() -&gt; [<a href="match_stream.html#type-match_id">match_stream:match_id()</a>]</tt><br></p>
+</div><p>Returns the list of available matches</p>
+
+<h3 class="function"><a name="match_delete-1">match_delete/1</a></h3>
+<div class="spec">
+<p><tt>match_delete(MatchId::<a href="match_stream.html#type-match_id">match_stream:match_id()</a>) -&gt; ok</tt><br></p>
+</div><p>Deletes a match.
+  Silently ignores the call if the match is not there</p>
+
+<h3 class="function"><a name="match_history-1">match_history/1</a></h3>
+<div class="spec">
+<p><tt>match_history(MatchId::<a href="match_stream.html#type-match_id">match_stream:match_id()</a>) -&gt; [<a href="match_stream.html#type-event">match_stream:event()</a>]</tt><br></p>
+</div><p>Returns match events</p>
+
+<h3 class="function"><a name="match_update-2">match_update/2</a></h3>
+<div class="spec">
+<p><tt>match_update(MatchId::<a href="match_stream.html#type-match_id">match_stream:match_id()</a>, UpdateFun::fun((<a href="match_stream.html#type-match">match_stream:match()</a>) -&gt; <a href="match_stream.html#type-match">match_stream:match()</a>)) -&gt; ok</tt><br></p>
 </div><p>throws <tt>not_found</tt></p>
 <p>Updates an existing match</p>
+
+<h3 class="function"><a name="user-1">user/1</a></h3>
+<div class="spec">
+<p><tt>user(UserId::<a href="match_stream.html#type-user_id">match_stream:user_id()</a>) -&gt; <a href="match_stream.html#type-user">match_stream:user()</a> | not_found</tt><br></p>
+</div><p>Returns an user</p>
+
+<h3 class="function"><a name="user_all-0">user_all/0</a></h3>
+<div class="spec">
+<p><tt>user_all() -&gt; [<a href="match_stream.html#type-user_id">match_stream:user_id()</a>]</tt><br></p>
+</div><p>Returns the list of available users</p>
+
+<h3 class="function"><a name="user_delete-1">user_delete/1</a></h3>
+<div class="spec">
+<p><tt>user_delete(UserId::<a href="match_stream.html#type-user_id">match_stream:user_id()</a>) -&gt; ok</tt><br></p>
+</div><p>Deletes an user.
+  Silently ignores the call if the user is not there</p>
+
+<h3 class="function"><a name="user_update-2">user_update/2</a></h3>
+<div class="spec">
+<p><tt>user_update(UserId::<a href="match_stream.html#type-user_id">match_stream:user_id()</a>, UpdateFun::fun((<a href="match_stream.html#type-user">match_stream:user()</a>) -&gt; <a href="match_stream.html#type-user">match_stream:user()</a>)) -&gt; ok</tt><br></p>
+</div><p>throws <tt>not_found</tt></p>
+<p>Updates an existing user</p>
 <hr>
 
 <div class="navbar"><a name="#navbar_bottom"></a><table width="100%" border="0" cellspacing="0" cellpadding="2" summary="navigation bar"><tr><td><a href="overview-summary.html" target="overviewFrame">Overview</a></td><td><a href="http://www.erlang.org/"><img src="erlang.png" align="right" border="0" alt="erlang logo"></a></td></tr></table></div>
-<p><i>Generated by EDoc, Sep 14 2011, 16:53:53.</i></p>
+<p><i>Generated by EDoc, Sep 21 2011, 16:21:48.</i></p>
 </body>
 </html>

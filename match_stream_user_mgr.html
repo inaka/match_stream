@@ -1,14 +1,14 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html>
 <head>
-<title>Module match_stream_user_sup</title>
+<title>Module match_stream_user_mgr</title>
 <link rel="stylesheet" type="text/css" href="stylesheet.css" title="EDoc">
 </head>
 <body bgcolor="white">
 <div class="navbar"><a name="#navbar_top"></a><table width="100%" border="0" cellspacing="0" cellpadding="2" summary="navigation bar"><tr><td><a href="overview-summary.html" target="overviewFrame">Overview</a></td><td><a href="http://www.erlang.org/"><img src="erlang.png" align="right" border="0" alt="erlang logo"></a></td></tr></table></div>
 <hr>
 
-<h1>Module match_stream_user_sup</h1>
+<h1>Module match_stream_user_mgr</h1>
 <ul class="index"><li><a href="#description">Description</a></li><li><a href="#index">Function Index</a></li><li><a href="#functions">Function Details</a></li></ul>Supervisor for User Processes.
 <p>Copyright © (C) 2010 InakaLabs S.R.L.</p>
 
@@ -17,21 +17,15 @@
 
 <h2><a name="description">Description</a></h2>Supervisor for User Processes
 <h2><a name="index">Function Index</a></h2>
-<table width="100%" border="1" cellspacing="0" cellpadding="2" summary="function index"><tr><td valign="top"><a href="#count_users-0">count_users/0</a></td><td> Returns the count of reigstered users under the supervision of this process.</td></tr>
-<tr><td valign="top"><a href="#start_link-0">start_link/0</a></td><td> Starts the supervisor process.</td></tr>
+<table width="100%" border="1" cellspacing="0" cellpadding="2" summary="function index"><tr><td valign="top"><a href="#start_link-1">start_link/1</a></td><td> Starts the supervisor process.</td></tr>
 <tr><td valign="top"><a href="#start_user-1">start_user/1</a></td><td> Starts a new client process.</td></tr>
 </table>
 
 <h2><a name="functions">Function Details</a></h2>
 
-<h3 class="function"><a name="count_users-0">count_users/0</a></h3>
+<h3 class="function"><a name="start_link-1">start_link/1</a></h3>
 <div class="spec">
-<p><tt>count_users() -&gt; non_neg_integer()</tt><br></p>
-</div><p> Returns the count of reigstered users under the supervision of this process</p>
-
-<h3 class="function"><a name="start_link-0">start_link/0</a></h3>
-<div class="spec">
-<p><tt>start_link() -&gt; ignore | {error, term()} | {ok, pid()}</tt><br></p>
+<p><tt>start_link(Name::atom()) -&gt; ignore | {error, term()} | {ok, pid()}</tt><br></p>
 </div><p> Starts the supervisor process</p>
 
 <h3 class="function"><a name="start_user-1">start_user/1</a></h3>

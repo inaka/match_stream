@@ -6,8 +6,6 @@
 %%%-------------------------------------------------------------------
 -module(match_stream_user_mgr).
 
--include("match_stream.hrl").
-
 -behaviour(supervisor).
 
 -export([start_link/1, start_user/1, init/1]).

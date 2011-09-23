@@ -29,7 +29,7 @@ start_user(User) ->
 %% Server functions
 %% ====================================================================
 %% @hidden
--spec init([]) -> {ok, {{simple_one_for_one, 100, 1}, [supervisor:child_spec()]}}.
+-spec init([]) -> {ok, {{simple_one_for_one, 100, 1}, [{match_stream_user, {match_stream_user, start_link, []}, transient, brutal_kill, worker, [match_stream_user]}]}}.
 init([]) ->
   {ok, {{simple_one_for_one, 100, 1},
         [{match_stream_user, {match_stream_user, start_link, []},

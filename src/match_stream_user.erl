@@ -52,7 +52,7 @@ start_link(UserId) ->
 %% Server functions
 %% =================================================================================================
 %% @hidden
--spec init(match_stream:user_id()) -> {ok, state()}.
+-spec init(match_stream:user_id()) -> {ok, state(), 0}.
 init(UserId) ->
   {ok, #state{user_id = UserId}, 0}.
 

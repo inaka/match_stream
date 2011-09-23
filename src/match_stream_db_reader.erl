@@ -74,7 +74,7 @@ init([]) ->
   {ok, #state{redis = Redis}}.
 
 %% @hidden
--spec handle_call(tuple(), reference(), state()) -> {reply, {ok, term()} | {throw, term()}, state()}.
+-spec handle_call(tuple(), reference(), state()) -> {noreply, state()}.
 handle_call(Request, From, State) ->
   [RedisConn|Redis] = lists:reverse(State#state.redis),
   proc_lib:spawn_link(

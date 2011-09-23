@@ -10,7 +10,7 @@ build_plt: all
 	dialyzer -pa deps/*/ebin --apps erts kernel stdlib inets --output_plt ~/.match_stream_dialyzer_plt --build_plt
 
 analyze: all
-	dialyzer -pa deps/*/ebin --plt ~/.match_stream_dialyzer_plt -Wunmatched_returns -Werror_handling -Wbehaviours ebin
+	dialyzer -pa deps/*/ebin --plt ~/.match_stream_dialyzer_plt -Wunmatched_returns -Werror_handling -Wrace_conditions ebin
 
 update-deps:
 	rebar update-deps

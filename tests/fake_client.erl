@@ -47,8 +47,12 @@ watch(N, C, Server, UserIdPrefix, MatchId) ->
 watch(Server, Port, UserId, MatchId) ->
   case gen_tcp:connect(Server, Port, [binary, {packet, line}]) of
     {ok, Socket} ->
-      gen_tcp:send(Socket, <<"VERSION:1:CONNECT:", UserId/binary, ":MATCH:", MatchId/binary, "\r\n">>),
-      loop(Socket);
+      case gen_tcp:send(Socket, <<"VERSION:1:CONNECT:", UserId/binary, ":MATCH:", MatchId/binary, "\r\n">>) of
+        ok ->
+          loop(Socket);
+        {error, Reason} ->
+          throw(Reason)
+      end;
     Error ->
       throw(Error)
   end.
@@ -57,7 +61,7 @@ watch(Server, Port, UserId, MatchId) ->
 loop(Socket) ->
   loop(Socket, [{<<"connect">>, complete}]).
 
--spec loop(port(), [binary()]) -> ok.
+-spec loop(port(), [binary() | {binary(), atom()}]) -> ok.
 loop(Socket, [{Event, complete}|Events]) ->
   receive
     {tcp, Socket, <<$\t, Msg/binary>>} -> %% A detail line, we ignore it 

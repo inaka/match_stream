@@ -16,7 +16,7 @@
 %% External functions
 %% ====================================================================
 %% @doc  Starts the supervisor process
--spec start_link() -> ignore | {error, term()} | {ok, pid()}.
+-spec start_link() -> {ok, pid()}.
 start_link() ->
   %% First of all we create/join the group of all supervisors...
   ok = pg2:create(?MODULE),

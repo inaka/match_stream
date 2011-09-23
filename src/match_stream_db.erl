@@ -106,7 +106,6 @@ init([]) ->
 %% =================================================================================================
 %% Private functions
 %% =================================================================================================
--spec make_call(read|write, tuple()) -> ok | not_found | match_stream:match().
 make_call(Type, Call) ->
   case Type of
     read -> match_stream_db_reader:make_call(Call);

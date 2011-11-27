@@ -83,7 +83,8 @@ stop() -> application:stop(?MODULE).
 %%-------------------------------------------------------------------
 %% SERVER API
 %%-------------------------------------------------------------------
-%% @doc Registers a match
+%% @doc Registers a match.
+%%      StartDate is expected to be an UTC datetime
 -spec new_match(team(), team(), date()) -> {ok, match_id()} | {error, {duplicated, match_id()}}.
 new_match(Home, Visit, StartDate) ->
   MatchId = build_id(Home, Visit, StartDate),

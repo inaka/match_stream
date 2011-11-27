@@ -1,1 +1,1 @@
-This project will be used to show our scaling technics in our blog.
+*MatchStream* fork specifically targeted at the [Copa Argentina](http://copaargentina.org).

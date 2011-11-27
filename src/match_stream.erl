@@ -37,7 +37,7 @@
 -type team() :: binary().
 -type match_id() :: binary().
 -type user_id() :: binary().
--type event_kind() :: status | start | stop | halftime_start | halftime_stop | extratime |
+-type event_kind() :: status | start | halftime | continue | stop | penalties |
                       shot | save | goal | corner | goalkick |
                       offside | foul | penalty | freekick | card |
                       substitution | throwin.
@@ -45,7 +45,7 @@
 -type player() :: {pos_integer(), binary()}. %% Number and name
 -type match() :: #match_stream_match{}.
 -type user() :: #match_stream_user{}.
--type period() :: not_started | first | last | halftime | first_extra | halftime_extra | last_extra | ended.
+-type period() :: not_started | first | halftime | last | penalties | ended.
 
 -type data() :: {home,            team()} |
                 {home_players,    [player()]} |

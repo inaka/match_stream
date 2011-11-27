@@ -129,24 +129,14 @@ update_match(Match, #match_stream_event{kind = start, data = Data}) ->
                                visit_players, Data, Match#match_stream_match.visit_players),
                            visit_score = 0,
                            period = first};
-update_match(Match, #match_stream_event{kind = halftime_start}) ->
-  Match#match_stream_match{period =
-                             case Match#match_stream_match.period of
-                               first -> halftime;
-                               first_extra -> halftime_extra;
-                               Period -> Period
-                             end};
-update_match(Match, #match_stream_event{kind = halftime_stop}) ->
-  Match#match_stream_match{period =
-                             case Match#match_stream_match.period of
-                               halftime -> last;
-                               halftime_extra -> last_extra;
-                               Period -> Period
-                             end};
+update_match(Match, #match_stream_event{kind = halftime}) ->
+  Match#match_stream_match{period = halftime};
+update_match(Match, #match_stream_event{kind = continue}) ->
+  Match#match_stream_match{period = last};
+update_match(Match, #match_stream_event{kind = penalties}) ->
+  Match#match_stream_match{period = penalties};
 update_match(Match, #match_stream_event{kind = stop}) ->
   Match#match_stream_match{period = ended};
-update_match(Match, #match_stream_event{kind = extratime}) ->
-  Match#match_stream_match{period = first_extra};
 update_match(Match, #match_stream_event{kind = goal, data = Data}) ->
   case {proplists:get_value(team, Data), Match#match_stream_match.home, Match#match_stream_match.visit} of
     {Team, Team, _} ->

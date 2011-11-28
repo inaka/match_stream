@@ -34,7 +34,9 @@
 -type date() :: {2000..3000, 1..12, 1..31}.
 -type time() :: {0..23, 0..59, 0..59}.
 -type datetime() :: {date(), time()}.
--type team() :: binary().
+-type division() :: binary().
+-type team() :: #match_stream_team{}.
+-type team_id() :: binary().
 -type match_id() :: binary().
 -type user_id() :: binary().
 -type event_kind() :: status | start | halftime | continue | stop | penalties |
@@ -47,24 +49,24 @@
 -type user() :: #match_stream_user{}.
 -type period() :: not_started | first | halftime | last | penalties | ended.
 
--type data() :: {home,            team()} |
+-type data() :: {home,            team_id()} |
                 {home_players,    [player()]} |
                 {home_score,      non_neg_integer()} |
-                {visit,           team()} |
+                {visit,           team_id()} |
                 {visit_players,   [player()]} |
                 {visit_score,     non_neg_integer()} |
                 {period,          period()} |
                 {start_time,      datetime()} |
-                {team,            team()} |
-                {player_team,     team()} |
+                {team,            team_id()} |
+                {player_team,     team_id()} |
                 {player,          player()} |
                 {player_out,      player()} |
                 {player_in,       player()} |
                 {card,            red | yellow} |
                 {comment,         binary()}.
 
--export_type([team/0, match_id/0, user_id/0, event_kind/0, event/0, player/0, data/0, match/0, user/0,
-              datetime/0, date/0, period/0]).
+-export_type([team/0, team_id/0, match_id/0, user_id/0, event_kind/0, event/0, player/0, data/0,
+              match/0, user/0, datetime/0, date/0, period/0]).
 
 %%-------------------------------------------------------------------
 %% ADMIN API
@@ -85,7 +87,7 @@ stop() -> application:stop(?MODULE).
 %%-------------------------------------------------------------------
 %% @doc Registers a match.
 %%      StartDate is expected to be an UTC datetime
--spec new_match(team(), team(), date()) -> {ok, match_id()} | {error, {duplicated, match_id()}}.
+-spec new_match(team_id(), team_id(), date()) -> {ok, match_id()} | {error, {duplicated, match_id()}}.
 new_match(Home, Visit, StartDate) ->
   MatchId = build_id(Home, Visit, StartDate),
   try match_stream_db:create(
@@ -100,7 +102,7 @@ new_match(Home, Visit, StartDate) ->
   end.
 
 %% @doc Cancels a match
--spec cancel_match(team(), team(), date()) -> ok.
+-spec cancel_match(team_id(), team_id(), date()) -> ok.
 cancel_match(Home, Visit, StartDate) ->
   cancel_match(build_id(Home, Visit, StartDate)).
 
@@ -111,7 +113,7 @@ cancel_match(MatchId) ->
   match_stream_db:match_delete(MatchId).
 
 %% @doc Something happened in a match
--spec register_event(team(), team(), date(), event_kind(), [{atom(), binary()}]) -> ok.
+-spec register_event(team_id(), team_id(), date(), event_kind(), [{atom(), binary()}]) -> ok.
 register_event(Home, Visit, StartDate, Kind, Data) ->
   register_event(build_id(Home, Visit, StartDate), Kind, Data).
 
@@ -140,7 +142,7 @@ history(MatchId) ->
   match_stream_db:match_history(MatchId).
 
 %% @doc List of match events
--spec history(team(), team(), date()) -> [event()].
+-spec history(team_id(), team_id(), date()) -> [event()].
 history(Home, Visit, StartDate) ->
   history(build_id(Home, Visit, StartDate)).
 
@@ -165,7 +167,7 @@ start(_StartType, _StartArgs) ->
 stop(_State) -> ok.
 
 %% @private
--spec build_id(team(), team(), date()) -> match_id().
+-spec build_id(team_id(), team_id(), date()) -> match_id().
 build_id(Home, Visit, {Year, Month, Day}) ->
   <<Home/binary, $-, Visit/binary, $-,
     (to_binary(Year))/binary, $-,

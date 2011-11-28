@@ -1,0 +1,2262 @@
+/*ESTRUCTURA*/
+body{
+	margin:0;
+	padding:0;
+	background-color: #FFFFFF;
+	line-height: 1.5em;
+	font-family: Arial, Helvetica, sans-serif;
+	background-image: url(../images/background.gif);
+}
+
+* {
+	outline:0px;
+}
+
+#contentwrapper{
+float: left;
+width:624px;
+}
+
+#subwrapper {
+	background:#FFF;
+	width:624px;
+	margin-bottom:15px;
+}
+
+#headertop {
+	margin-bottom:5px;
+}
+
+#subtitulo{
+height:24px;
+font-size: 12px;
+color: #FFF;
+text-align:center;
+display:block;
+}
+
+h1#maintitle {
+	background:url(../images/tit_ole_minutoaminuto.png);
+	width:204px;
+	height:20px;
+	overflow:hidden;
+	text-indent:-9000px;
+	display:block;
+	margin:0px;
+	padding:0px;
+	float:left;
+}
+
+#bienvenidaLogin, #bienvenidaLogout {
+    float: right;
+    font-size: 12px;
+    color: #FFF;
+}
+
+.nombre { font-weight: bold; color:#729013; padding:0px; }
+
+#headerflash{
+    width: 618px;
+    height: 142px;
+    position: relative;
+    padding: 3px;
+    background-image:url(../images/header1.jpg);
+}
+
+#headerContent {
+    display:none;
+}
+
+#equipo1 {
+    position: absolute;
+    width:250px;
+    top:8px;
+    left: 10px;
+}
+
+#escudo1, #escudo2 {
+    float: left;
+    width:48px;
+    height:48px;
+}
+
+#nombre1, #nombre2 {
+    font-family: Tahoma, Arial;
+    font-size: 22px;
+    font-weight: bold;
+    color: #FFFFFF;
+    width:180px;
+    float: left;
+}
+
+.sombra {
+    text-shadow: -1px -1px 1px #000000;
+    filter: dropshadow(color=#000000, offx=-1, offy=-1);
+}
+
+#goles1, #goles2 {
+    color: #FEBC20;
+    float: left;
+    font-family: Arial;
+    font-size: 11px;
+    line-height: 14px;
+    margin-left: 3px;
+    margin-top: 0px;
+    height:58px;
+    overflow:hidden;
+    width: 199px;
+
+}
+
+#equipo2 {
+    position: absolute;
+    width:250px;
+    top:8px;
+    right: 10px;
+}
+
+#goles2, #nombre2, #escudo2 {
+    float: right!important;
+    text-align: right;
+}
+
+#contentTablero {
+    height: 78px;
+    left: 263px;
+    padding-top: 8px;
+    position: absolute;
+    top: 4px;
+    width: 100px;
+}
+
+#tiempo {
+    background-color: black;
+    color: #FFFFFF;
+    font-family: Arial;
+    font-size: 18px;
+    font-weight: bold;
+    height: 24px;
+    margin-top: 0px;
+    padding-left: 5px;
+    padding-right: 5px;
+    padding-top: 3px;
+	padding-bottom: 2px;
+    text-align: center;
+    width: 89px;
+}
+
+#tiempo.texto {
+    font-size: 13px;
+}
+
+#tiempo.countDown {
+	color:#bc0000;
+	text-shadow:0 0 5px red;
+}
+
+#marcador {
+    color: #FFFFFF;
+    letter-spacing: 5px;
+    font-family: Tahoma,Arial;
+    font-size: 48px;
+	line-height:1;
+	position: relative;
+	top:-4px;
+    font-weight:bold;
+    text-align: center;
+    width: 100px;
+}
+
+#primerTiempo, #golLocal {
+    float: left;
+    height: 47px;
+    margin-left: 4px;
+    margin-top: 91px;
+    position: relative;
+    width: 303px;
+}
+
+#segundoTiempo, #golVisitante {
+    float: right;
+    height: 47px;
+    margin-right: 4px;
+    margin-top: 91px;
+    position: relative;
+    width: 303px;
+}
+
+#estadio, #tiempoPartido {
+    background-image: url("../images/estadioMarker.png");
+    background-position: right center;
+    background-repeat: no-repeat;
+    color: #E7E7E7;
+    font-size: 11px;
+    font-weight: bold;
+    height: 20px;
+    padding-right: 20px;
+    position: absolute;
+    right: 18px;
+    text-align: right;
+    top: 67px;
+    width: 215px;
+}
+
+#tiempoPartido {
+    background-image: none;
+    left: 18px;
+    padding-right: 0;
+    right: inherit;
+    text-align: left;
+}
+
+#headerAvatar {
+        display:inline;
+	
+	
+}
+
+#headerAvatar img { border: 1px solid #999; margin-left:10px; }
+
+#contentcolumn{
+    width:403px;
+    float:left;
+    padding: 0;
+    margin-left: 5px;
+    background: #FFF;
+    
+    z-index: 0;
+}
+
+#fblogout {
+    color:#85ba06;
+}
+
+#leftcolumn{
+float: left;
+width: 190px; /*Width of left column in pixel*/
+background: #FFF;
+margin: 0px 17px 10px 5px;
+position: relative;
+z-index: 1;
+}
+
+#oleteve {float: left;}
+
+#clarin_global {float: left; margin-left:12px; }
+
+
+
+/*COLUMNA CENTRAL RELATO*/
+#relato {
+	font-size: 14px;
+	color: #7f7f7f;
+	line-height: normal;
+	height: 1121px;
+	z-index: 0;
+	width:401px;
+	font-weight: bold;
+	border-left: solid 1px #dcddde;
+	border-right: solid 1px #dcddde;
+	background-color: #FFF;
+    overflow: auto;
+	overflow-x:hidden;
+    overflow-y:hidden;
+    position: relative;
+}
+
+#coments {}
+
+/*SOLAPA PARTIDOS*/
+#statstabs {
+	margin-bottom:10px;
+    display:none;
+}
+
+
+ul.solapas_partidos {
+	font-size: 11px;
+	font-weight: bold;
+	list-style:none;
+	margin:0;
+	padding:0;
+	height: 20px;
+}
+ul.solapas_partidos li.tab {
+	float:left;
+	margin-right:1px;
+	text-align:center;
+	text-transform:capitalize;
+}
+ul.solapas_partidos li.tab a {
+	display:block;
+	padding:0 6px 0 6px;
+	background-color:#dcdbd9;
+	color:#000;
+	text-decoration: none;
+}
+ul.solapas_partidos li.tab a:hover {
+	color:#000;
+	background-color:#fff
+}
+ul.solapas_partidos li.tab a.active {
+	color:#fff;
+	height: 25px;
+	background-color:#000
+}
+.solapas_partidos_content { font-size: 11px; font-weight: bold; width:168px; height:60px; border:1px solid black; background-color:white; margin-top:5px; padding:5px 10px 5px 10px; overflow:auto; line-height: 16px; clear:both; }
+
+.solapas_partidos_content * {
+    margin: 0;
+    padding: 0;
+}
+
+.solapas_partidos_content ul {
+    list-style: none;
+}
+.solapas_partidos_content ul  li {
+    margin-bottom: 2px;
+}
+
+.solapas_partidos_content strong {
+    color: #729013;
+    font-weight: bold;
+}
+
+.solapas_partidos_content em {
+    font-style: normal;
+}
+
+.solapas_partidos_content .jugador { color:#729013 }
+
+
+/*SOLAPA HAY EQUIPO*/
+#solapa { margin-top:7px; border:1px solid #dcddde; width:205px; margin-bottom:7px; position:relative;}
+
+#solapa ul.solapas_hay_equipo {
+	font-size: 12px;
+	font-weight: bold;
+	list-style:none;
+	margin:0;
+	padding:0;
+	height: 20px;
+}
+#solapa ul.solapas_hay_equipo li.tab {
+	float:left;
+	text-align:center
+}
+#solapa ul.solapas_hay_equipo li.tab a {
+	display:block;
+	padding:0 6px 0 6px;
+	background-image: url(../images/formacionActivo.jpg);
+	color:#fff;
+	background-color:#000;
+    width: 90px;
+	height: 28px;
+	text-decoration: none;
+}
+#solapa ul.solapas_hay_equipo li.tab a:hover {
+	
+}
+#solapa ul.solapas_hay_equipo li.tab a.active {
+	background-image: url(../images/formacionInactivo.jpg);
+	color:#509402;
+	background-color:#dcdbd9;
+	height: 28px;
+	
+    
+}
+.solapas_hay_equipo_content	{ font-size: 11px; font-weight: bold; min-height: 305px; width:205px;background-color:white; margin-top:5px; line-height: 16px }
+.linea_jugador { padding:3px 0 2px 0; }
+.num { float:left; width:15px; text-align:right; display:block; }
+.solapas_hay_equipo_content .jugador { font-size: 12px; font-weight: normal; color:#000 }
+.solapas_hay_equipo_content .jugador_icon { padding-left:5px; vertical-align: text-bottom; }
+.linea { border-bottom:1px dotted #dcddde }
+.solapas_hay_equipo_content .linea_dt { background-color: #eff2f4; font-size: 12px; font-weight: bold; color:#000 }
+.linea_arbitro {
+    padding: 3px 0 2px 10px;
+    font-size: 11px;
+    color:#FFF;
+    background-image: url(../images/backArbitro.jpg);
+
+}
+
+#footerTrans {
+    background-image: url("../images/backFooter.png");
+    bottom: 0;
+    display: block;
+    height: 75px;
+    position: absolute;
+    width: 100%;
+    z-index: 1;
+}
+
+.solapas_hay_equipo_content ul {
+    list-style: none outside none;
+    margin: 3px 0 0;
+    padding: 0px 0 0;
+
+}
+.solapas_hay_equipo_content ul li {
+   padding: 0px;
+   margin-top: 3px;
+   font-size: 12px;
+   height: 29px;
+   clear:both;
+   background-image: url(../images/formacionLi.jpg);
+}
+
+
+
+.clearcontent {
+    clear:both;
+}
+
+.solapas_hay_equipo_content ul li.detalle {
+    cursor:pointer;
+}
+
+.solapas_hay_equipo_content ul li.suplente {
+    background: #EFEFEF;
+	margin:0px !important;
+    padding:3px;
+    padding-top: 0px;
+    background-image: url(../images/suplentesLi.jpg);
+    padding-bottom: 0px;
+}
+
+.solapas_hay_equipo_content ul li.suplenteLabel {
+    /*background: #CCC;
+	border-bottom:dotted 1px;*/
+	padding-left:5px;
+    background-image: url(../images/formacionActivo.jpg);
+    color:#FFF;
+}
+
+.separadorJugador {
+   border-bottom: 1px dotted #666 !important;
+}
+
+.solapas_hay_equipo_content ul li.dtLi {
+    margin:0px !important;
+    padding:3px !important;
+    background: #999;
+}
+
+.solapas_hay_equipo_content ul li em {
+    font-style: normal;
+    display:block;
+    width: 20px;
+    margin-right: 5px;
+    text-align: right;
+    float: left;
+    padding-top: 5px;
+    padding-bottom: 3px;
+}
+
+.solapas_hay_equipo_content ul li strong {
+    display: block;
+    float: left;
+    font-weight: normal;
+    padding-bottom: 6px;
+    padding-top: 5px;
+}
+
+#arbitroBox { font-weight: bold; display:inline; }
+.separador { height: 10px; }
+
+/*SOLAPA FIXTURE*/
+#solapa_fixture { 
+	background-color: #FFF; 
+	height: 188px; 
+	margin-bottom:15px;
+	overflow:hidden;
+	padding:3px;
+	clear:both;
+}
+
+#solapa_fixture ul.solapas_fixture {
+	font-size: 9px;
+	font-weight: bold;
+	list-style:none;
+	margin:7px 0 0 0;
+	padding:0;
+	height: 18px;
+
+}
+#solapa_fixture ul.solapas_fixture li.tab {
+	float:left;
+	margin-right:1px;
+	text-align:center;
+	text-transform:uppercase;
+}
+#solapa_fixture ul.solapas_fixture li.tab a {
+	display:block;
+	padding:0 4px 0 4px;
+	background-color:#dcdbd9;
+	color:#000;
+	text-decoration: none;
+}
+#solapa_fixture ul.solapas_fixture li.tab a:hover {
+	color:#000;
+	background-color:#fff
+}
+#solapa_fixture ul.solapas_fixture li.tab a.active {
+	color:#fff;
+	height: 25px;
+	background-color:#000
+}
+.solapas_fixture_content { font-size: 12px!important; width:615px; height: 133px; border:1px solid black; margin-top:7px; clear:both; overflow:auto;}
+.Tabla_resultados { float:left; width:282px; }
+.SHeader { font-size: 11px; font-weight: bold; }
+.AltRow { font-size: 12px!important; background-color:#eceeff; }
+.puntos { color:#475dff; }
+.txt_gris { color:#666; line-height: 16px }
+.name a {  color:#666 !important; text-decoration:none; }
+.name a:hover {  color:#444 !important; text-decoration:underline;}
+#dias_partidos {
+	float:right;
+font-size:11px;
+height:133px;
+margin-left:12px;
+overflow:auto;
+width:303px;}
+.resultado { color:#000; text-align: center; }
+
+#octavos, #cuartos {
+	overflow:auto;
+}
+
+.solapas_fixture_content td.ganador{
+	font-weight:bold;
+}
+
+.solapas_fixture_content tr.fondo td {
+	background-color:#eceeff;
+}
+
+#semis, #final {
+	overflow:hidden;
+	}
+
+#semis tr.partido td {
+	font-size:16px;
+	padding:3px;
+}
+
+#final tr.partido td {
+	font-size:18px;
+}
+
+#final tr#tercero.partido td {
+	font-size:14px;
+	padding:2px;
+}
+#final tr.estadioMini td {
+	font-size:10px;
+}
+
+#final td.marcador {
+	width:30px !important;
+	color:#FFF;
+	background-color:#000;
+}
+
+#semis tr.estadio td {
+	font-size:10px;
+}
+final tr.estadio td {
+	font-size:11px;
+}
+
+.clear {
+	clear:both;
+}
+
+ul#relatos {
+    list-style:none;
+    margin:0px; padding:0px;
+    font-weight:normal;
+    border-top:1px solid #dcddde;
+	position: relative;
+	top:0px;
+}
+
+ul#relatos * {
+	margin:0px; padding:0px;	
+	list-style:none;
+}
+
+ul#relatos > li {
+}
+
+ul#relatos li .incidenciaBox {
+	background-color: #E0E0E0;
+    background-image: url("../images/backIncidencia.jpg");
+    border-bottom: 1px solid #DCDDDE;
+    padding: 10px;
+    background-repeat: repeat-x;
+}
+
+ul#relatos li .tiempo_partido {
+	color:#000;
+	font-weight:bold;
+	font-size:16px;
+}
+
+
+ul#relatos li .detalle_incidencia {
+	width:75px;
+	height:52px;
+	float:left;
+	background:no-repeat right top;
+}
+
+ul#relatos li .incidencia_text {
+	font-family:Arial, Helvetica, sans-serif;
+	font-size:14px;
+	font-weight:normal;
+        padding-left:75px;
+}
+
+ul#relatos li .incidencia_options {
+	clear:both;
+	margin-left:75px;
+	font-size:11px;
+	font-weight:normal;
+}
+
+ul#relatos ul.local_social li {
+	float:left;
+	margin-right:15px;
+}
+
+ul#relatos ul.local_social li a {
+	text-decoration:none;
+	color:#0E72E3;
+
+}
+
+ul#relatos ul.socialmedia {
+	float:right;
+	margin-right:5px;
+}
+ul#relatos ul.socialmedia li {
+	float:left;
+}
+ul#relatos ul.socialmedia li a {
+	display:block;
+	width:16px;
+	height:16px;
+	background:no-repeat center center;
+	text-indent:-9000px;
+	overflow:hidden;
+	margin-left:5px;
+}
+
+ul#relatos ul.socialmedia li.buzz a {
+	background-image:url(../images/icon_red_buzz.png);
+}
+ul#relatos ul.socialmedia li.twitter a {
+	background-image:url(../images/icon_red_twitter.png);
+}
+ul#relatos ul.socialmedia li.facebook a {
+	background-image:url(../images/icon_red_facebook.png);
+}
+
+/* Estilos para los tipo de incidencias, fondo del listado. */
+.i10 { background-image:url(../images/incidencias/cambio.png) !important; }
+.i100, .i101, .i102, .i103, .i93 { background-image:url(../images/incidencias/gol.png) !important; }
+.i31,.i32,.i33,.i34,.i41,.i42,.i43,.i44,.i82,.i92 { background-image:url(../images/incidencias/tiro.al.arco.png) !important; }
+.i30,.i40,.i80,.i90,.i81,.i91 { background-image:url(../images/incidencias/penal.atajado.png) !important; }
+.i20 { background-image:url(../images/incidencias/tarjeta.amarilla.png) !important; }
+.i110,.i111 { background-image:url(../images/incidencias/tarjeta.roja.png) !important; }
+.i120, .i121 { background-image:url(../images/incidencias/penal.png) !important; }
+.i70 { background-image:url(../images/incidencias/comentario.png) !important; }
+.i2000,.i2001,.i2002,.i2003,.i2004,.i2005,.i2006,.i2007,.i2008,.i2009,.i2010,.i2011,.i2012 { background-image:url(../images/incidencias/fin.de.tiempo.png) !important; }
+
+.expulsado {
+    color: #666;
+}
+
+
+.pie_comentarios { background-color: #EEE; border-top:1px dotted #dcddde; border-left:1px solid #dcddde; border-right:1px solid #dcddde; border-bottom:1px solid #dcddde; font-size: 12px; font-weight: bold; margin:0; padding:7px; color:#729013; line-height:normal; }
+
+.pie_comentarios a {
+  display:block;
+  width:16px;
+  margin-right: 3px;
+  height:16px;
+  float: left;
+  text-indent: -99999px;
+}
+
+.upComent {
+	background-image: url(../images/up.png);
+}
+
+.downComent {
+	background-image: url(../images/down.png);
+}
+
+.topComent {
+	background-image: url(../images/top.png);
+}
+
+ul#relatos li .incidencia_commentarios {
+	padding:0px 10px 10px 85px;
+	border-bottom:1px solid #dcddde;
+	background-image:url("../images/backComentFace.jpg");
+	background-repeat:repeat-x;
+	background-color:#EEEEEE;
+	font-size:11px;
+}
+
+.timeIcon {
+	width:16px;
+	height:24px;
+	position:absolute;
+        cursor: pointer;
+	display:block;}
+
+.gol {
+	background-image:url(../images/golIcon.png);
+	top:-2px;
+	left:96px;}
+
+.golContra {
+	background-image:url(../images/golIconContra.png);
+	top:-2px;
+	left:96px;}
+	
+
+.dobleDobleamarilla {
+	background-image: url("../images/iconDoble.png");
+    height: 13px;
+	width:10px;
+    top: 24px;}	
+	
+.tarjetaAm {
+	background-image: url("../images/iconAmarilla.png");
+    height: 13px;
+	width:10px;
+    top: 24px;}
+
+.multiInc {
+	background-image: url("../images/multiInc.png");
+    height: 13px;
+	width:10px;
+    top: 24px;}
+	
+.cambio {
+	background-image: url("../images/iconCambio.png");
+    height: 13px;
+	width:10px;
+    top: 7px;}
+		
+.tarjeta {
+	background-image: url("../images/iconRoja.png");
+    height: 13px;
+	width:10px;
+    top: 24px;}		
+
+ul#relatos li .incidencia_commentarios form {
+	padding-top:10px;
+}
+
+ul#relatos li .incidencia_commentarios ul {
+    clear:both;
+}
+
+ul#relatos li  .incidencia_commentarios ul li {
+	padding-top:10px;
+}
+
+ul#relatos li .incidencia_commentarios .commentAvatar {
+	width:32px;
+	height:32px;
+	float:left;
+	margin-right:10px;
+}
+
+ul#relatos li .incidencia_commentarios .commentText {
+	float:left;
+	width:245px;
+}
+
+ul#relatos li .incidencia_main .megusta {
+	padding: 5px 3px 5px 30px;
+	.padding: 2px 3px 5px 30px;
+	clear:both;
+	border: 1px solid #dcddde;
+	background:url(../images/icon_gusto.gif) no-repeat 10px 5px;
+	margin-left:75px;
+	font-size:11px;
+	margin-top:10px;
+}
+
+ul#relatos li .formMessage {
+	padding: 5px;
+	clear:both;
+	border: 1px solid #8e8e8e;
+	background: #EFEFEF;
+	font-size:11px;
+	color: #666;
+	font-weight: bold;
+	margin-bottom:5px;
+}
+
+ul#relatos li .incidencia_main .megusta a {
+	font-weight:bold;
+	text-decoration:none;
+	color:#3788E3;
+}
+
+ul#relatos li .incidencia_commentarios .commentText a {
+	text-decoration:none;
+	color: #3788e3;
+}
+
+ul#relatos li .incidencia_commentarios textarea {
+        font-family: "Lucida Grande", tahoma, verdana, arial, sans-serif;
+	border:1px solid #dcddde;
+	padding:7px;
+	font-size:11px;
+	color:#666;
+	width:95%;
+        height: 17px;
+        resize:none;
+}
+
+ul#relatos li .incidencia_commentarios .nombreInput {
+	font-family: "Lucida Grande", tahoma, verdana, arial, sans-serif;
+	border:1px solid #dcddde;
+	padding:7px;
+	font-size:11px;
+	color:#666;
+	width:89%;
+	height: 17px;
+	margin-bottom: 5px;
+	padding-left: 25px;
+	background: url(../images/anonimo.gif) no-repeat 5px center #FFF;
+}
+
+
+/* SPECIAL INCIDENCIA */
+ul#relatos li.special {
+    background-repeat: repeat-x;
+	background-color:#89AD0B;
+	background-image: url("../images/backComent.png");
+}
+ul#relatos li.special .incidenciaBox {
+	padding:0px;
+	border-bottom:none !important;	
+	background: no-repeat left bottom;
+}
+
+ul#relatos li.special .incidenciaBox a {
+	color:#006;
+}
+
+ul#relatos .special .incidencia_main {
+	padding:10px;
+}
+
+ul#relatos .special .tiempo_partido {
+	opacity:0.6;
+	filter:alpha(opacity=60);
+}
+
+ul#relatos .special .mask {
+	background:url(../images/mask_white.gif);
+	height:9px;
+}
+
+ul#relatos .mask_comments .mask {
+	background:url(../images/mask.gif) !important;
+	height:9px;
+}
+
+ul#relatos .special .incidencia_commentarios {
+	padding-top:0px !important;
+}
+
+ul#relatos li.special .incidenciaBox .incidencia_text {
+	color:#000;
+}
+
+ul#relatos li.special .incidenciaBox .megusta {
+	border: 1px solid #CCC;
+	background:url(../images/backMeGusta.png) left center;
+	color:#000;
+}
+
+
+
+ul#relatos li.special .sponsorsays {
+	color:#000;
+	font-weight:bold;
+	margin-bottom:5px;
+}
+
+div.sponsor {
+    position: relative;
+}
+
+div#buttonsInc {
+    height: 18px;
+    position: absolute;
+    right: 6px;
+    top: 6px;
+    width: 45px;
+}
+
+div#buttonsInc a {
+    display: block;
+    float: left;
+    height: 18px;
+    margin-right: 9px;
+    text-indent: -9999px;
+    width: 18px;
+}
+
+
+.comentar_button {
+    background-color: #8a9cc2;
+    border: 1px solid #29447E;
+    border-bottom: solid 1px #1a356e;
+    margin: 0 2px;
+    display:block;
+    margin-right: 9px;
+    margin-left: 40px;
+    width: 68px;
+    margin-top: 5px !important;
+}
+
+.comentInc {
+    background-image: url(../images/coment.png);
+	background-position: 0 0px;
+}
+
+.comentIncA {
+    background-image: url(../images/coment.png);
+	background-position: 0px -18px;
+}
+
+#mute {
+    background-image: url(../images/mute.png);
+    margin-right: 0px!important;
+	background-position:0px 0px;
+}
+
+.comentar_button input {
+    font-size: 11px;
+    font-weight: bold;
+    color: #fff;
+    background-color: #6079ab;
+   font-family: "Lucida Grande", tahoma, verdana, arial, sans-serif;
+   margin-top: 1px !important;
+   padding: 4px 7px !important;
+   width: 68px;
+   text-align: center;
+   border:none;
+}
+
+a#poweredby {
+	background:url(../images/cejeaxlogo.gif) no-repeat;
+	width:58px;
+	display:block;
+	overflow:hidden;
+	outline:none;
+	text-indent:-9000px;
+	float:right;
+	height:25px;
+	margin-top:-5px;
+	margin-right:-5px;
+	position:relative;
+}
+
+.sinacciones {
+    color:#666;
+}
+
+.minis {
+    display:block;
+    background: center center no-repeat;
+	margin-top:5px;
+    float:left;
+    width: 17px;
+    height: 17px;
+    margin-left: 3px;
+}
+
+.minis2 {
+    display:block;
+    background: center center no-repeat;
+    float:right;
+    width: 17px;
+    height: 17px;
+    margin-left: 3px;
+}
+.miniSalio { background-image:url(../images/incidencias/mini/sale.png) !important; }
+.mini10 { background-image:url(../images/incidencias/mini/entra.png) !important; }
+.mini100, .mini101, .mini102 { background-image:url(../images/incidencias/mini/gol.png) !important; }
+.mini103 { background-image:url(../images/incidencias/mini/golencontra.png) !important; }
+.mini110 { background-image:url(../images/incidencias/mini/roja.png) !important; }
+.mini111 { background-image:url(../images/incidencias/mini/dobleamarilla.png) !important; }
+.mini20 { background-image:url(../images/incidencias/mini/amarilla.png) !important; }
+
+/* Window de Jugadores */
+
+#control_overlay {
+        background-color:#000;
+}
+
+.modal {
+        background-color:#fff;
+        padding:10px;
+        border:1px solid #333;
+}
+
+.tooltip2 {
+        border:1px solid #000;
+        background-color:#fff;
+        height:25px;
+        width:200px;
+        font-family:"Lucida Grande",Verdana;
+        font-size:10px;
+        color:#333;
+}
+
+.simple_window {
+        background-image:url("../images/popup.png");
+        width:395px;
+        height:236px;
+        padding: 7px 9px 9px 9px;
+        text-align:left;
+        font-family:"Lucida Grande",Verdana;
+        font-size:12px;
+        color:#333;
+        position:absolute;
+        left:112px;
+        top: 0px;
+        overflow:hidden;
+}
+
+#innerJugador {
+    padding:10px;
+    font-family: Arial, Helvetica, Verdana, sans-serif;
+    position:relative;
+}
+
+#innerJugador * {
+    padding:0px;
+    margin: 0px;
+}
+
+
+#camisetaBox {
+    float:left;
+    width:140px;
+}
+
+#camisetaBox h2 {
+    text-transform: uppercase;
+    color: #00c2f8;
+    font-size: 20px;
+    text-align: center;
+    margin-right: 30px;
+}
+
+#camisetaBox h1 {
+    text-transform: uppercase;
+    color: #00c2f8;
+    text-align: center;
+    font-size: 70px;
+    margin-right: 30px;
+    margin-top: 40px;
+
+}
+
+#detalleJugador {
+    float:left;
+    width: 200px;
+    margin-left: 20px;
+}
+
+#detalleJugador small {
+    font-size: 10px;
+
+}
+
+#detalleJugador h1 {
+    font-size: 18px;
+    color: #0196bf;
+    margin-top: -10px;
+    margin-bottom: 10px;
+}
+
+#detalleJugador h2 {
+    font-size: 16px;
+    color: #000;
+    margin-top: -10px;
+    margin-bottom: 10px;
+}
+
+
+
+#detalleJugador ul {
+    list-style: none;
+    margin-left: 15px;
+    font-size: 11px;
+}
+#detalleJugador ul li {
+    border-bottom: 1px dotted #666;
+    font-weight: bold;
+}
+
+#detalleJugador ul li span {
+    font-weight: normal;
+}
+
+#closeButtonDetalle {
+    position:absolute;
+    right:10px;
+    top:10px;
+    width: 61px;
+    height: 14px;
+    cursor:pointer;
+    background: url('../images/cerrar.png');
+}
+
+.window {
+        
+        background: #FFF;
+        background-position:top left;
+        -moz-border-radius: 10px;
+        -webkit-border-radius: 10px;
+        padding:10px;
+        font-family:"Lucida Grande",Verdana;
+        font-size:13px;
+        font-weight:bold;
+        color:#000;
+        text-align:center;
+        min-width:150px;
+        min-height:100px;
+}
+
+.window .window_contents {
+        margin-top:10px;
+        width:100%;
+        height:100%;
+}
+
+.window .window_header {
+        text-align:center;
+}
+
+.window .window_title {
+        margin-top:-7px;
+        margin-bottom:7px;
+        font-size:11px;
+        cursor:move;
+}
+
+
+
+.linkMoreComments {
+    color: #3788E3;
+    text-decoration: none;
+    background: url('../images/more.png') left center no-repeat;
+    display:block;
+    padding-left: 18px !important;
+}
+
+.linkMoreComments:hover {
+    text-decoration: underline;
+
+}
+
+/*.commentInputInactive {
+    color: #666;
+    border-color: #dcddde;
+}*/
+
+.commentInputActive {
+    color: #000 !important;
+    border-color: #dcddde;
+}
+
+.commentInputError {
+    border-color: #9A0000 !important;
+}
+
+div#opinion {
+	clear:both;
+	text-align:center;
+	background: #000;
+	padding:5px;
+	margin-bottom:10px;
+}
+
+img {
+	border:none;
+}
+
+div#votacion, div#sediceque {
+	border: 1px solid #dfdfdf;
+	margin-bottom:10px;
+    width: 204px;
+}
+div#votacion h2 {
+	background: url("../images/titleLateral.jpg") repeat scroll 0 0 transparent;
+    color: #FFFFFF;
+    display: block;
+    font-size: 14px;
+    height: 26px;
+    margin: 0 0 5px;
+    overflow: hidden;
+    padding-top: 3px;
+    text-indent: 29px;
+    border-bottom: 1px solid #d8d8d8;
+    text-transform: uppercase;
+    width: 204px;
+}
+
+div#sediceque h2 {
+	display:block;
+	background:url(../images/sedice.gif);
+	height:21px;
+	width:186px;
+	margin:1px;
+	text-indent:-9000px;
+	overflow:hidden;
+}
+div#sediceque li,div#sediceque ul  {
+	margin:0px;
+	padding:0px;
+	line-height:normal;
+}
+
+div#sediceque li {
+	list-style:none;
+	padding:5px;
+	border-bottom: 1px dotted #cfcfcf;
+}
+
+div#sediceque h3 {
+	color:#000;
+	text-decoration:none;
+	padding:0px;
+	margin:0px;
+	font-size:11px;
+	font-weight:normal;
+	margin-bottom:5px;
+}
+
+div#sediceque h3 a {
+	color:#000;
+	text-decoration:none;
+}
+
+div#sediceque h3 a:hover {
+	text-decoration:underline;
+}
+
+div#sediceque small {
+	font-size:10px;
+	margin-top:-5px;
+}
+
+.morefeeds {
+	display:block;
+	background: #eff3f7;
+	color: #86ba04;
+	font-weight:bold;
+	font-size:12px;
+	text-decoration:none;
+	padding:5px;
+	display:block;
+}
+
+.boxContador {
+	background-image:url(../images/box211.gif);
+	background-repeat:no-repeat;
+	width:210px;
+	height:69px;}
+	
+.boxContadorMediano {
+	background-image:url(../images/boxMediano.gif);
+	background-repeat:no-repeat;
+	width:148px;
+	height:117px;}	
+	
+	
+.boxPartido {
+	font-family:Arial, Helvetica, sans-serif;
+	float:left;
+	width:200px;
+	height:36px;
+	padding-left:5px;
+	padding-right:5px;}
+	
+.boxPartidoMediano {
+	font-family:Arial, Helvetica, sans-serif;
+	float:left;
+	width:138px;
+	height:27px;
+	padding-left:5px;
+	padding-right:5px;}
+	
+.equipo1, .equipo2, .equipo1M, .equipo2M {
+	float:left;
+	margin-top:8px;}
+	
+.equipo1M, .equipo2M {
+	margin-top:3px;}
+
+.equipo2, .equipo2M {
+	float:right;}
+	
+.equipo1 span, .equipo2 span {
+	font-weight:bold;
+	font-size:18px;
+	text-transform:uppercase;
+	position:relative;
+	top:-2px;}	
+	
+.equipo1M span, .equipo2M span {
+	font-weight:bold;
+	font-size:15px;
+	text-transform:uppercase;}	
+	
+.tant, .tant2, .tantM, .tant2M {
+	background-color:#000000;
+	color:#FFFFFF;
+	float:left;
+	font-weight:bold;
+	height:28px;
+	margin-left:10px;
+	padding-top:8px;
+	text-align:center;
+	width:25px;}
+	
+.tantM, .tant2M {
+	height:23px;
+	margin-left:14px;
+	padding-top:3px;
+	width:22px;}
+	
+.tant2 {
+	margin-left:6px;}
+	
+.tant2M {
+	margin-left:2px;}
+	
+.textPartido {
+	height:24px;
+	width:202px;
+	color:#575757;
+	float:left;
+	padding-left:5px;
+	padding-right:5px;
+	font-size:11px;}
+	
+.textPartido strong.goles {
+	color:#727272;}	
+	
+.tiempoM {
+	height:19px;
+	width:148px;}
+	
+.tiempoM, .tiempoM div, .dato1M {
+	float:left;}
+	
+.minuteM {
+	font-size:10px;
+	margin-left:8px;
+	margin-top:-2px;}
+	
+.contentCronometroM {
+	height:19px;
+	margin-left:6px;
+	margin-top:-2px;
+	width:97px;}
+	
+.estapaM {
+	color:#989898;
+	font-size:12px;
+	font-weight:bold;
+	margin-left:6px;}
+	
+.minutoM, .dosPuntos, .minutoM, .segundoM, .logoM {
+	color:#274B06;
+	font-size:15px;
+	font-weight:bold;}
+	
+.minutoM {
+	letter-spacing:6px;
+	margin-left:8px;}
+	
+.dosPuntos {
+	margin-left:0px;}
+	
+.segundoM {
+	letter-spacing:6px;
+	margin-left:6px;}
+	
+.dato1M {
+	color:#818181;
+	font-size:11px;
+	height:14px;
+	margin-left:15px;
+	width:148px;}
+	
+.tittleM {
+	font-weight:bold;
+	color:#BFBFBF;}
+	
+.logoOleM {
+	text-align:center;
+	width:148px;}
+	
+.logoOleM img {
+	margin-top:15px;}
+
+#votacionPost {
+    
+}
+
+.degrade {
+    background: url('../images/bgvotos.png');
+    height: 329px;
+	position: relative;
+    color: #FFF;
+   /*margin: 0px 2px; border: 1px solid #000;*/
+    padding: 10px;
+    padding-right: 200px;
+}
+
+#votacionPost #resultado {
+    background: right top;
+    margin: 0px 2px;
+    color: #FFF;
+    border: 1px solid #000;
+}
+
+#votacionPost #resultado .degrade * {
+    margin:0px;
+    padding: 0px;
+}
+
+#votacionPost #resultado .degrade h3 {
+    font-size: 16px;
+	position: absolute;
+	bottom:0px;
+	padding-right: 5px;
+    margin-bottom: 10px;
+}
+
+#votacionPost #resultado .degrade p {
+    font-size: 15px;
+    font-weight: normal;
+margin-bottom: 15px;
+}
+
+#votacionPost #resultado .degrade small {
+font-size: 12px;
+font-weight: normal;
+margin-bottom: 10px;
+display: block;
+}
+
+#votacionPost #resultado .degrade h4 {
+    font-size: 30px;
+margin-bottom: 10px;
+}
+
+#votacionPost #porcentajes {
+background: #EDEFE6;
+margin: 2px;
+margin-top:0px;
+border: 1px solid #000;
+border-top: none;
+    padding: 12px;
+}
+
+#votacionPost #porcentajes h3 {
+    font-size: 15px;
+    font-family: Arial, Helvetica, sans-serif;
+    font-weight: normal;
+    margin: 0px;
+    padding: 0px;
+    margin-bottom: 10px;
+    color: #000;
+}
+
+#votacionPost #porcentajes ul {
+    margin: 0px;
+    padding: 0px;
+    list-style: none;
+}
+
+#votacionPost #porcentajes ul li {
+    font-size: 13px;
+    margin-bottom: 7px;
+}
+
+#votacionPost #porcentajes ul li span {
+    display:block;
+    margin-bottom: 5px;
+}
+
+#votacionPost #porcentajes ul li small {
+    font-size: 13px;
+    float:right;
+}
+
+#votacionPost #porcentajes ul li .barra {
+    height: 8px;
+    background: url('../images/backvot2.png');
+    overflow: hidden;
+}
+
+#votacionPost #porcentajes ul li .aumento {
+    height: 8px;
+    background: #afaeae;
+    overflow: hidden;
+}
+
+#votacionPost #porcentajes ul li.correcto span, #votacionPost #porcentajes ul li.correcto small {
+    color: #4d660b;
+}
+
+#votacionPost #porcentajes ul li.correcto .aumento {
+    height: 8px;
+    background: #4d660b;
+    overflow: hidden;
+}
+
+
+#votacionBody h2, #votacionPost h2 {
+    background: url("../images/titleLarge.jpg") repeat scroll 0 0 transparent;
+    color: #FFFFFF;
+    display: block;
+    font-family: Arial,Helvetica,sans-serif;
+    font-size: 15px;
+    height: 23px;
+    margin: 2px;
+    overflow: hidden;
+    padding: 6px 0 0;
+    text-indent: 29px;
+    text-transform: uppercase;
+}
+
+#votacionBody {
+    background: url('../images/backvot1.png');
+    border-bottom: solid 1px #BFBFBF;
+	overflow: hidden;
+}
+
+#graciasPorVotar {
+	height:35px;
+}
+
+#votacionBody h3 {
+    padding: 10px;
+    display:block;
+    margin:0px;
+    color: #496005;
+    font-size: 25px;
+}
+
+#votacionBody ul, #votacionBody li {
+    margin: 0px;
+    padding: 0px;
+}
+
+#votacionBody form {
+    background: url('../images/separador.png') no-repeat top left;
+    padding-top: 12px;
+}
+
+#votacionBody ul {
+     background: url('../images/backvot2.png');
+     padding-bottom: 7px;
+}
+
+#votacionBody li {
+    padding: 3px 7px;
+    color: #000;
+}
+
+#dovotar {
+    border: outset 1px #7f7f7f;
+    padding: 3px;
+    color: #475dff;
+    font-weight: bold;
+    text-transform: uppercase;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 12px;
+    margin-left: 25px;
+    margin-top: 10px;
+    cursor:pointer;
+}
+
+div#headerStatus {
+ background: url("../images/durante.jpg") no-repeat scroll 0 0 transparent;
+    height: 31px;
+    margin-top: 6px;
+    overflow: hidden;
+    width: 403px;
+}
+
+div#headerStatusFin {
+    height: 10px;
+    overflow:hidden;
+    border-top: 1px solid #DCDDDE;
+    border-left: 1px solid #DCDDDE;
+    border-right: 1px solid #DCDDDE;
+}
+
+div#headerStatus.activo {
+    background: url("../images/durante.jpg");
+}
+div#headerStatus.pre {
+    background: url("../images/pre.png") no-repeat;
+    overflow:hidden;
+}
+
+
+div#pieChart{
+	background-image:url(../images/zona.png);
+	background-position:top center;
+	background-repeat:no-repeat;
+	padding:0;
+	margin:0;
+}
+div#pieChart div#pieContent {
+
+	height:157px;
+	
+}
+div#pieChart div#vosChart {
+	background:url(../images/vos.png) no-repeat;
+	width:53px;
+	height:30px;
+	margin:0;
+	padding:0;
+}
+div#referenciasPie {
+	margin: 10px 0 5px 10px ;
+	font-size: 12px;
+}
+div#referenciasPie ul  {margin: 0px ;padding:0;}
+div#referenciasPie ul li {
+	list-style:none;
+	margin-bottom:3px;
+	height:22px;
+	font-size:12px;
+}
+div#referenciasPie div.porcentaje{
+	width:49px;
+	height:19px;
+	font-weight:bold;
+	font-size:15px;
+	padding-bottom:2px;
+	margin-right:7px;
+	float:left;
+}
+div#referenciasPie div#porcentsi {background-color:#84b905;}
+div#referenciasPie div#porcentquizas {background-color:#f9f200;}
+div#referenciasPie div#porcentno {background-color:#f33139;}
+
+.degrade {
+    background: url('../images/bgvotos.png');
+}
+
+#contentTermometro {
+     border: 1px solid #DCDDDE;
+    margin-bottom: 7px;
+    margin-top: 7px;
+    width: 205px;
+    height: 108px;
+    z-index: -20;
+    position: relative;
+}
+
+#termometro {
+    background-image: url("../images/backTermometro.jpg");
+    float: left;
+    height: 79px;
+    position: relative;
+	overflow:hidden;
+    width: 205px;
+}
+
+#contentTermometro h2 {
+    background: url("../images/titleLateral.jpg") repeat scroll 0 0 transparent;
+    border-bottom: 1px solid #D8D8D8;
+    color: #FFFFFF;
+    display: block;
+    float:left;
+    font-size: 14px;
+    height: 26px;
+    margin: 0px;
+    overflow: hidden;
+    padding-top: 3px;
+    text-indent: 29px;
+    text-transform: uppercase;
+    width: 204px;
+}
+
+#TermInactivo {
+   background-image: url("../images/termometroBack.jpg");
+   height: 42px;
+   float:left;
+   width:204px;
+}
+
+#TermActivo {
+    position: absolute;
+    top:0;
+    width:80%;
+    left:0px;
+    height:42px;
+    background-image: url("../images/termometro.jpg");
+}
+
+#handle1 {
+    background-image: url(../images/handler.png);
+    width:14px;
+    cursor: pointer;
+    height:14px;
+    display:block;
+}
+
+#track1 {
+    background-image: url("bg-fader.gif");
+    background-repeat: no-repeat;
+    height: 28px;
+    left: 22px;
+    position: absolute;
+    top: 30px;
+    width: 188px;
+}
+
+#element_id, #messageVote {
+    color: #4A4A4A;
+    float: left;
+    font-size: 10px;
+    line-height: 1.2;
+    margin-left: 5px;
+    margin-top: 5px;
+    width: 141px;    
+}
+
+#votar {
+    background-image: url("../images/votar.png");
+    display: block;
+    height: 19px;
+    position: absolute;
+    right: 4px;
+    text-indent: -99999px;
+    top: 48px;
+    width: 52px;
+}
+
+#votar:active {
+    top: 49px;
+}
+
+#canchaContainerLocal, #canchaContainerVisitante {
+    background-image: url("../images/cancha.png");
+    background-position: left top;
+    background-repeat: no-repeat;
+    bottom: 0;
+    display: block;
+    float: left;
+    height: 314px;
+    position: absolute;
+    width: 624px;
+    z-index: 1;
+}
+
+.cancha {
+    display: block;
+    float: left;
+    height: 276px;
+    margin-left: 6px;
+    margin-top: 6px;
+    width: 386px;
+    position: relative;
+}
+
+.jugadorDetalle {
+    float: left;
+    height: 255px;
+    position: relative;
+    width:199px;
+    margin-top: 7px;
+    margin-left: 6px;
+    display: block;
+    padding: 10px;
+}
+
+.letraCancha {
+    color:#313131;
+    font-family: Tahoma, Arial;
+    font-size: 12px;
+}
+
+.tituloNombre {
+    display: block;
+    font-size: 10px;
+    margin: 0;
+    padding: 0;
+    position: absolute;
+    top: 1px;
+}
+
+.nombreJug {
+    color: #00A2FF;
+    font-family: Tahoma,Arial;
+    font-size: 16px;
+    font-weight: bold;
+    line-height: 16px;
+    position: absolute;
+    top: 20px;
+}
+
+.camiseta {
+    background-image: url("../images/casaca.jpg");
+    color: #FFFFFF;
+    display: block;
+    font-family: Tahoma,arial;
+    font-size: 24px;
+    font-weight: bold;
+    height: 34px;
+    left: 10px;
+    padding-top: 8px;
+    position: absolute;
+    text-align: center;
+    top: 60px;
+    width: 42px;
+}
+
+.escudoFormC {
+    height: 48px;
+    left: 166px;
+    position: absolute;
+    top: 10px;
+    width: 48px;
+}
+
+.tituloPosicion {
+    display: block;
+    font-size: 10px;
+    left: 61px;
+    position: absolute;
+    top: 53px;
+}
+
+.posicion {
+    color: #1E1E1E;
+    display: block;
+    font-family: Tahoma,Arial;
+    font-size: 14px;
+    font-weight: bold;
+    left: 60px;
+    position: absolute;
+    top: 69px;
+}
+
+.enEstepartido {
+    height: 155px;
+    left: 10px;
+    overflow: auto;
+    position: absolute;
+    top: 120px;
+    width: 207px;
+}
+
+.enEstepartido h3 {
+    color: #5B5B5B;
+    display: block;
+    font-family: tahoma,arial;
+    font-size: 18px;
+    font-weight: bold;
+    margin: 0;
+    padding: 0;
+}
+
+.enEstepartido ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-top:1px dotted #313131;
+}
+
+.enEstepartido ul li {
+    font-family: tahoma,arial;
+    font-size: 12px;
+    padding: 2px;
+    color: #313131;
+    border-bottom:1px dotted #313131;
+}
+
+.desc {
+    float:left;
+}
+
+.infoCancha {
+    float:right;
+    font-weight: bold;
+}
+
+.containerButtons {
+    bottom: 1px;
+    height: 23px;
+    list-style: none outside none;
+    margin: 0;
+    padding: 0;
+    position: absolute;
+    width: 205px;
+    z-index: 1;
+}
+
+.containerButtons li {
+    float:left;
+	width:97px;
+	margin-left:3px;
+}
+
+#toggleCancha {
+    background-image: url("../images/whiteArrow.png");
+    bottom: 0;
+    cursor: pointer;
+    display: block;
+    float: left;
+    height: 24px;
+    margin-right: 1px;
+    position: absolute;
+    right: 4px;
+    width: 24px;
+    z-index: 2;
+}
+
+.formacion {
+    background-image: url("../images/solapaInactive.png");
+    color: #5E5E5E;
+    display: block;
+    float: left;
+    font-size: 12px;
+    font-weight: bold;
+    height: 24px;
+    margin-left: 3px;
+    text-align: center;
+    text-decoration: none;
+    width: 97px;
+}
+
+ul.containerButtons li.tab a.active {
+    background-image: url("../images/solapaActive.png");
+    color: #FFFFFF;
+    display: block;
+    float: left;
+    font-size: 12px;
+    font-weight: bold;
+    height: 24px;
+    margin-left: 3px;
+    text-align: center;
+    text-decoration: none;
+    width: 97px;
+}
+
+.formButton {
+	background-image: url("../images/asiEstanParadosNew.png");
+	background-repeat: no-repeat;
+	color: #FFFFFF;
+	cursor: pointer;
+	font-family: tahoma;
+	font-size: 12px;
+	font-weight: bold;
+	height: 42px;
+	left: 0;
+	margin-top: 5px;
+	padding-left: 3px;
+	padding-top: 2px;
+	text-indent: 27px;
+	text-shadow: 0 0 3px #000000;
+	width: 204px;
+	text-indent: -999px;
+}
+.formButton:hover { 
+	background-position: bottom left;
+} 
+
+#efectoCancha {
+    width: 624px;
+    height:0px;
+    position: relative;
+    overflow: hidden;
+    top:-57px;
+    border-top: 3px solid transparent;
+    z-index: 300;
+}
+
+.defensa, .medio, .medio2, .delantera {
+    float: left;
+    height: 276px;
+    width: 80px;
+    position: relative;
+}
+
+.defensa {
+    margin-left: 55px;
+}
+
+.medio {}
+
+.medio2 {}
+
+.delantera {}
+
+.jugadorPos {
+    color: #FFFFFF;
+    display: block;
+    font-family: tahoma,arial;
+    font-size: 12px;
+    font-weight: bold;
+    position: relative;
+    text-align: center;
+    text-decoration: none;
+    text-shadow: 0 0 2px #000000;
+    position:absolute;
+    left:0;
+    width: 70px;
+}
+
+.jugadorPos:hover .casaca {
+    background-position: center -38px;
+}
+
+.nameJug {
+    background-color: #000000;
+    color: #FFFFFF;
+    display: block;
+    font-family: arial;
+    opacity: 0.8;
+    font-size: 10px;
+    overflow: hidden;
+    line-height: normal;
+    padding: 2px;
+}
+
+.arquero {
+    left: 23px;
+    top: 118px;
+}
+
+.incJug {
+	display:block;
+	width:13px;
+	height:13px;}
+	
+.casaca {
+    background-image: url("../images/jugForm.png");
+    background-position: top center;
+    background-repeat: no-repeat;
+    height: 29px;
+    overflow: hidden;
+    display: block;
+    text-align: center;
+    margin: 0;
+    padding-top: 7px;
+}
+
+.enCancha {
+    margin-left: 0 !important;
+    margin-top: 0 !important;
+    position: relative;
+
+}
+	
+/*a.jugadorPos span.enCancha:last-child {
+    margin-bottom:-7px!important;}*/
+
+#tituloEncuesta {
+	color: #353535;
+    display: block;
+    font-family: tahoma,arial;
+    font-size: 12px;
+    font-weight: bold;
+    line-height: 16px;
+    margin-bottom: 12px;
+    padding-left: 5px;
+    padding-right: 5px;
+}
+
+#linkRevivi, #votacionBody h2, #votacionPost h2 { 
+	display: block;
+    margin-left: 5px;
+    margin-top: 5px;
+}
+
+
+/* Cancha */
+
+#canchaLocal div, #canchaVisitante div {
+    position: absolute;
+    height: 276px;
+    width: 66px;
+    padding: 0 3px;
+    top:3px;
+}
+
+#canchaVisitante div {
+    top:auto;
+    bottom:3px;
+}
+
+#arqueroLocal {left: 3px}
+#defensaLocal{left: 75px}
+#medioLocal {left: 147px}
+#medio2Local {left: 219px}
+#delanteraLocal {left: 291px}
+
+#arqueroVisitante {right: 3px}
+#defensaVisitante{right: 75px}
+#medioVisitante {right: 147px}
+#medio2Visitante {right: 219px}
+#delanteraVisitante {right: 291px}
+
+.incCont {
+    left: 49px;
+    position: absolute;
+    width: 16px;
+    height: 32px;
+    top: 3px;
+    overflow: hidden;
+}
+
+.backInc { background-image: url("../images/backInc.png"); }
+.timeline {
+    background-image: url("../images/timelineDefault.png");
+}
+
+.penales {
+    background-image: url("../images/timeline.png")!important;
+    display:none;
+}
+
+#timeButtons {
+    left: 9px;
+    margin: 0;
+    padding: 0;
+    position: absolute;
+    top: 73px;
+}
+
+#timeButtons li {
+    display: inline;
+    float: left;
+    margin-right: 11px;
+    display:none;
+}
+
+#timeButtons li a {
+    background-image: url("../images/buttonPenales.png");
+    color: #979797;
+    display: block;
+    font-size: 11px;
+    line-height: 20px;
+    height: 20px;
+    padding-left: 7px;
+    position: relative;
+    text-decoration: none;
+    z-index: 5;
+}
+
+#timeButtons li a span {
+    display: block;
+    width:7px;
+    background-image: url("../images/buttonPenalesEnd.png");
+    height:20px;
+    position:absolute;
+    right:-7px;
+    top:0;
+}
+
+#timeButtons li a:active, #timeButtons li a:active span, a.timeActivo, a.timeActivo span {
+    background-position: 0px -20px!important;
+    color:#c0ff00!important;
+}
+
+.resultadoPenal {
+    color: #FFFFFF;
+    font-family: Tahoma,Arial;
+    font-size: 30px;
+    font-weight: bold;
+    left: 10px;
+    position: absolute;
+    top: 10px;
+}
+
+.pelotitas {
+    margin: 0;
+    padding: 0;
+    position: absolute;
+    top:10px;
+    right:10px;
+}
+
+.right {
+    left:10px!important;
+}
+
+.pelotitas li {
+    display:block;
+    margin-right: 5px;
+    text-indent: -99999px;
+    background-image: url("../images/pelotaPenales.png");
+    width:28px;
+    height:28px;
+    float:right;
+}
+
+.right li {
+    float:left!important;  
+}
+
+.vacio {
+    background-position: 0px -84px;
+}
+
+.golPenal {
+    background-position: 0px -28px;
+}
+
+.errado {
+    background-position: 0px -56px;
+}
+#primerTE, #segundoTE {
+    background-image: url("../images/timelineTE.png");
+}
+#timeTE {display:none;}
+#primerTE {
+    float: left;
+    height: 47px;
+    margin-left: 4px;
+    margin-top: 91px;
+    position: relative;
+    width: 303px;
+}
+
+#segundoTE {
+    float: right;
+    height: 47px;
+    margin-right: 4px;
+    margin-top: 91px;
+    position: relative;
+    width: 303px;
+}

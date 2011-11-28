@@ -2,56 +2,25 @@
 <head>
 <meta HTTP-equiv="X-UA-Compatible" content="IE=EDGE">
 <link href="css/default.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="js/jquery-1.6.1.min.js"></script>
+<script type="text/javascript" src="js/jquery-ui-1.8.13.custom.min.js"></script>
+<script src="js/socket.io.js"></script>
+<script src="js/match-stream.js"></script>
 <!--[if lt IE 8]>
     <script src="js/json2.js"></script>
-    <style type="text/css">@import "styles/ie8.css";</style>
-    <![endif]-->
-
-<script src="js/socket.io.js"></script>
-
+<![endif]-->
 <script type="text/javascript">
-	function connect(port) {
-		document.getElementById("results").innerHTML = "Connecting to port "
-				+ port.toString() + "<br />";
-		socket = new io.Socket(location.hostname, {
-			port : port
-		});
-		socket.on('message', function(data) {
-			if (typeof data == "string")
-				document.getElementById("results").innerHTML += data
-						+ "</br />";
-			else if (data.error)
-				alert(JSON.stringify(data.desc));
-			else
-				document.getElementById("results").innerHTML += JSON
-						.stringify(data.result)
-						+ "<br />";
-		});
-		socket
-				.on(
-						'connect',
-						function() {
-							document.getElementById("results").innerHTML += "connected!</br />";
-						});
-		socket.connect();
-	};
-	function exec(cmd) {
-		socket.send({
-			"cmd" : cmd
-		})
-	}
+  var query = window.location.search.substring(1);
+  var vars = query.split("&");
+  var ms_options = {};
+  for (var i=0; i<vars.length; i++) {
+      var pair = vars[i].split("=");
+      window.ms_options[pair[0]] = pair[1];
+  }
+  connect(ms_options);
 </script>
 </head>
 <body>
-	<div style="display: none; visibility: hidden">
-		<label for="txtPort">Port: <input type="text" id="txtPort"
-			value="8001" /></label> <input type="button"
-			onclick="connect(parseInt(txtPort.value, 10))" value="Connect" /> <input
-			type="button" onclick="socket.disconnect()" value="Disconnect" /> <label
-			for="txtCmd">Cmd: <input type="text" id="txtCmd"
-			value="erlang:now()" /></label> <input type="button"
-			onclick="exec(txtCmd.value)" value="Exec" />
-	</div>
 	<div id="main">
 		<div id="header-container">
 			<div id="header">
@@ -78,11 +47,11 @@
 			</div>
 		</div>
 		<div id="content-column">
-			<h3 class="title active">Lo que est&aacute; pasando</h3>
 			<div id="stream">
-				<div id="footerTrans"></div>
+				<div id="footer"></div>
 				<ul id="events">
-					<li id="event1234"><div class="event-box">
+					<li id="event1234">
+						<div class="event-box">
 							<div class="event-main">
 								<div class="event-detail">
 									<div class="event-time">1'</div>
@@ -90,39 +59,25 @@
 								<div class="event-text">
 									<strong>Rojas (Godoy Cruz) es amonestado.</strong>
 								</div>
-								<div class="event-options">
-									<ul class="social-local">
-										<li><a href="#" rel="comment">Comentar</a></li>
-										<li><a href="#" rel="like">Me gusta</a></li>
-									</ul>
-									<ul class="social-media">
-										<li class="buzz"><a id="buzzshare11493"
-											href="http://www.google.com/buzz/post" target="_blank"
-											title="Compartir en Google Buzz">Compartir en Buzz</a></li>
-										<li class="facebook"><a id="fbshare11493" href="#"
-											title="Compartir en Facebook">Compartir en Facebook</a></li>
-										<li class="twitter"><a id="twittershare11493"
-											href="http://twitter.com/share?text=..." target="_blank"
-											title="Compartir en Twitter">Compartir en Twitter</a></li>
-									</ul>
-								</div>
 								<div class="clear"></div>
-								<div class="like" style="display: none;"></div>
 							</div>
 							<div class="clear"></div>
 						</div>
-						<div class="event-comments">
-							<form id="event-form1234" name="event-form1234" method="post" action="">
-								<div id="event-form-msg1234" class="event-form-msg">Mensaje</div>
-								<input type="text" class="name-input" name="nameNN"
-									id="nameNN123" value="Escribe tu nombre...">
-								<textarea name="event-form-text1234" cols="1" rows="1"
-									spellcheck="false" id="event-form-text1234">Escribe un comentario...</textarea>
-								<span class="comment-button"><input type="submit" value="Comentar"></span>
-							</form>
-							<ul>
-							</ul>
-						</div></li>
+					</li>
+					<li id="event1235">
+						<div class="event-box">
+							<div class="event-main">
+								<div class="event-detail">
+									<div class="event-time">1'</div>
+								</div>
+								<div class="event-text">
+									<strong>Gol de Godoy Cruz (Rojas).</strong>
+								</div>
+								<div class="clear"></div>
+							</div>
+							<div class="clear"></div>
+						</div>
+					</li>
 				</ul>
 			</div>
 		</div>

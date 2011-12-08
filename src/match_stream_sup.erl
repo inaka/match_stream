@@ -36,8 +36,6 @@ start_link() ->
 init([]) ->
   Listener = {match_stream_client_listener_sup, {match_stream_client_listener_sup, start_link, []},
               permanent, 1000, supervisor, [match_stream_client_listener_sup]},
-  ClientSup = {match_stream_client_sup, {match_stream_client_sup, start_link, []},
-               permanent, 1000, supervisor, [match_stream_client_sup]},
   UserSup = {match_stream_user_sup, {match_stream_user_sup, start_link, []},
              permanent, 1000, supervisor, [match_stream_user_sup]},
   MatchSup = {match_stream_match_sup, {match_stream_match_sup, start_link, []},
@@ -45,4 +43,4 @@ init([]) ->
   MatchDb = {match_stream_db, {match_stream_db, start_link, []},
               permanent, 1000, supervisor, [match_stream_db]},
   ?INFO("Main supervisor initialized~n", []),
-  {ok, {{one_for_one, 5, 10}, [MatchDb, Listener, MatchSup, UserSup, ClientSup]}}.
+  {ok, {{one_for_one, 5, 10}, [MatchDb, Listener, MatchSup, UserSup]}}.

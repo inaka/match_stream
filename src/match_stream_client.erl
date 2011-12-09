@@ -8,206 +8,158 @@
 -author('Fernando Benavides <fbenavides@novamens.com>').
 
 -include("match_stream.hrl").
+-include("socketio.hrl").
+-include("misultin.hrl").
 
--behaviour(gen_fsm).
+-behaviour(gen_event).
 
--export([start_link/0, set_socket/2]).
--export([init/1, handle_event/3, handle_sync_event/4, handle_info/3, terminate/3, code_change/4]).
--export([wait_for_socket/2, wait_for_params/2, running/2]).
--export([send/2, disconnect/1]).
+-export([start/1]).
+-export([init/1, handle_event/2, handle_call/2, handle_info/2, terminate/2, code_change/3]).
+-export([send/2, err/2, disconnect/1]).
 
--define(FSM_TIMEOUT, 60000).
-
--record(state, {socket        :: port(),
-                buffer = <<>> :: binary(),
-                peerport      :: integer()}).
+-record(state, {connected = false :: boolean()}).
+-type state() :: #state{}.
 
 %% ====================================================================
 %% External functions
 %% ====================================================================
 %% -- General ---------------------------------------------------------
 %% @hidden
--spec start_link() -> {ok, pid()}.
-start_link() ->
-  gen_fsm:start_link(?MODULE, [], []).
+-spec start(pid()) -> ok.
+start(ClientPid) ->
+  case application:get_env(socketio_connection_timeout) of
+    undefined -> ok;
+    infinity -> ok;
+    ConnectionTimeout ->
+      erlang:send_after(ConnectionTimeout,
+                        socketio_client:event_manager(ClientPid),
+                        {connection_timeout, ClientPid}),
+      ok
+  end,
+  case socketio_client:request(ClientPid) of
+    {misultin_req, #req{peer_addr = Peer, uri = {abs_path, Uri}}, _Pid} ->
+      ?INFO("New socket.io client: From ~s using ~s~n", [inet_parse:ntoa(Peer), Uri]);
+    {misultin_ws, #ws{peer_addr = Peer, path = Uri}, _Pid} ->
+      ?INFO("New socket.io client: From ~s using ~s~n", [inet_parse:ntoa(Peer), Uri]);
+    Other ->
+      ?INFO("New socket.io client: using~n\t~p~n", [Other])
+  end,
+  gen_event:add_handler(socketio_client:event_manager(ClientPid), ?MODULE, []).
 
-%% @hidden
--spec set_socket(pid(), port()) -> ok.
-set_socket(Client, Socket) ->
-  gen_fsm:send_event(Client, {socket_ready, Socket}).
-
-%% @doc Notifies an event through the socket
--spec send(pid(), term()) -> ok.
+%% @doc Notifies an event to the client
+-spec send(pid(), #match_stream_event{}) -> ok.
 send(Client, Event) ->
-  gen_fsm:send_event(Client, {send, Event}).
+  ?DEBUG("socketio client (~p) sending ~p~n", [Client, Event]),
+  EncodedMessage = #msg{content = to_json(Event), json = true},
+  case rpc:pinfo(Client) of
+    undefined -> throw({dead_client, Client});
+    _ -> socketio_client:send(Client, EncodedMessage)
+  end.
+
+%% @doc Notifies an error to the client
+-spec err(pid(), binary()) -> ok.
+err(Client, Error) ->
+  ?DEBUG("socketio client (~p) err'ing ~s~n", [Client, Error]),
+  EncodedMessage = #msg{content = [{<<"error">>, <<"true">>},{<<"desc">>, Error}], json = true},
+  case rpc:pinfo(Client) of
+    undefined -> throw({dead_client, Client});
+    _ -> socketio_client:send(Client, EncodedMessage)
+  end.
 
 %% @doc disconnects the client
 -spec disconnect(pid()) -> ok.
 disconnect(Client) ->
-  gen_fsm:send_event(Client, disconnect).
+  catch socketio_client:stop(Client),
+  ok.
 
 %% ====================================================================
 %% FSM functions
 %% ====================================================================
 %% @hidden
--spec init([]) -> {ok, wait_for_socket, #state{}, ?FSM_TIMEOUT}.
-init([]) ->
-  {ok, wait_for_socket, #state{}, ?FSM_TIMEOUT}.
-
-%% ASYNC EVENTS -------------------------------------------------------
-%% @hidden
--spec wait_for_socket({socket_ready, port()} | timeout | term(), #state{}) -> {next_state, wait_for_socket, #state{}, ?FSM_TIMEOUT} | {stop, timeout, #state{}}.
-wait_for_socket({socket_ready, Socket}, State) ->
-  % Now we own the socket
-  PeerPort =
-    case inet:peername(Socket) of
-      {ok, {_Ip, Port}} -> Port;
-      Error -> Error
-    end,
-  ?DEBUG("Client on ~p connected~n", [PeerPort]),
-  ok = inet:setopts(Socket, [{active, once}, {packet, 0}, binary]),
-  {next_state, wait_for_params, State#state{socket   = Socket,
-                                            peerport = PeerPort}};
-wait_for_socket(timeout, State) ->
-  ?WARN("Socket wasn't set fast enough for client on ~p~n", [State#state.peerport]),
-  {stop, timeout, State};
-wait_for_socket(Other, State) ->
-  ?WARN("Unexpected message from client on ~p: ~p\n", [State#state.peerport, Other]),
-  {next_state, wait_for_socket, State, ?FSM_TIMEOUT}.
+-spec init(reference()) -> {ok, state()}.
+init([]) -> {ok, #state{}}.
 
 %% @hidden
--spec wait_for_params(term(), #state{}) -> {next_state, running, #state{}} | {stop, timeout, #state{}} | {stop, {unexpected_event, term()}, #state{}}.
-wait_for_params({data, Payload}, State = #state{peerport = PeerPort}) ->
-  ?DEBUG("Data received from client on ~p:~p~n",[PeerPort, Payload]),
-  case binary:split(Payload, [<<":">>, <<$\r>>, <<$\n>>], [global]) of
-    [<<"VERSION">>, <<"1">>, <<"CONNECT">>, Uid, <<"MATCH">>, MatchId | _] ->
-      try
-        ok = match_stream_user:watch(Uid, MatchId, self())
-      catch
-        Type:Error ->
-          ok = tcp_send(State#state.socket, frame(io_lib:format("ERROR: ~p~n", [Error])), State),
-          throw({stop, {error, Type, Error}, State})
-      end,
-      ?DEBUG("~s watching ~s using port ~p ~n", [Uid, MatchId, PeerPort]);
-    _ -> 
-      ?THROW("unknown socket command from client on ~p: ~p~n", [PeerPort, Payload]),
-      throw({stop, {unknown_client_command, Payload}, State})
+-spec handle_event(#msg{}, state()) -> {ok, state()}.
+handle_event({message, ClientPid, #msg{json = true, content = MsgProps}}, State) ->
+  case to_lower(proplists:get_value(<<"command">>, MsgProps)) of
+    undefined -> err(ClientPid, <<"Missing parameter 'command'">>);
+    Command -> ok = handle_command(Command, ClientPid, MsgProps)
   end,
-  {next_state, running, State};
-wait_for_params(timeout, State) ->
-  ?WARN("Params weren't sent fast enough for client on ~p~n", [State#state.peerport]),
-  {stop, timeout, State};
-wait_for_params(Event, State) ->
-  ?WARN("Unexpected Event from client on ~p: ~p~n", [State#state.peerport, Event]),
-  {stop, {unexpected_event, Event}, State}.
+  {ok, State#state{connected = true}};
+handle_event({message, ClientPid, #msg{json = false, content = Command}}, State) ->
+  ?WARN("unknown socket command ~p in~n\t~p~n", [Command, sys:get_status(ClientPid)]),
+  err(ClientPid, <<"Unknown socket message: ", Command/binary>>),
+  {ok, State};
+handle_event(Event, State) ->
+  ?INFO("Ignored socketio event: ~p~n", [Event]),
+  {ok, State}.
 
 %% @hidden
--spec running(term(), #state{}) -> {next_state, running, #state{}} | {stop, normal | {unexpected_event, term()}, #state{}}.
-running({send, Message}, State = #state{socket = S}) ->
-  ?DEBUG("Sending message to client on ~p:~n\t~p~n", [State#state.peerport, Message]),
-  ok = tcp_send(S, frame(Message), State),
-  {next_state, running, State};
-running(disconnect, State) ->
-  ?DEBUG("Disconnecting from client on ~p...~n", [State#state.peerport]),
-  {stop, normal, State};
-running(Event, State) ->
-  ?WARN("Unexpected Event:~n\t~p~n", [Event]),
-  {stop, {unexpected_event, Event}, State}.
-
-%% OTHER EVENTS -------------------------------------------------------
-%% @hidden
--spec handle_event(X, atom(), #state{}) -> {stop, {atom(), undefined_event, X}, #state{}}.
-handle_event(Event, StateName, StateData) ->
-    {stop, {StateName, undefined_event, Event}, StateData}.
+-spec handle_call(term(), state()) -> {ok, ok, state()}.
+handle_call(_Request, State) -> {ok, ok, State}.
 
 %% @hidden
--spec handle_sync_event(X, reference(), atom(), #state{}) -> {stop, {atom(), undefined_event, X}, #state{}}.
-handle_sync_event(Event, _From, StateName, StateData) ->
-    {stop, {StateName, undefined_event, Event}, StateData}.
+-spec handle_info({connection_timeout, pid()} | term(), state()) -> remove_handler | {ok, state()}.
+handle_info({connection_timeout, ClientPid}, #state{connected = false}) ->
+  ?WARN("Somebody didn't tune in fast enough:~n~p~n", [sys:get_status(ClientPid)]),
+  catch socketio_client:stop(ClientPid),
+  remove_handler;
+handle_info(_Info, State) -> {ok, State}.
 
 %% @hidden
--spec handle_info(term(), atom(), #state{}) -> term().
-handle_info({tcp, Socket, Bin}, StateName, #state{socket = Socket} = StateData) ->
-    % Flow control: enable forwarding of next TCP message
-    ok = inet:setopts(Socket, [{active, false}]),
-    Result = ?MODULE:StateName({data, Bin}, StateData),
-    ok = inet:setopts(Socket, [{active, once}]),
-    Result;
-handle_info({tcp_closed, Socket}, _StateName, #state{socket = Socket,
-                                                     peerport = PeerPort} = StateData) ->
-    ?DEBUG("Disconnected ~p.~n", [PeerPort]),
-    {stop, normal, StateData};
-handle_info(_Info, StateName, StateData) ->
-    {next_state, StateName, StateData}.
+-spec terminate(term(), state()) -> ok.
+terminate(_Reason, _State) -> ok.
 
 %% @hidden
--spec terminate(term(), atom(), #state{}) -> ok.
-terminate(normal, _StateName, #state{socket = Socket}) ->
-  (catch gen_tcp:close(Socket)),
-  ok;
-terminate(Reason, _StateName, State = #state{socket = Socket}) ->
-  ?INFO("Terminating client on ~p: ~p~n", [State#state.peerport, Reason]),
-  (catch gen_tcp:close(Socket)),
-  ok.
-
-%% @hidden
--spec code_change(term(), atom(), #state{}, any()) -> {ok, atom(), #state{}}.
-code_change(_OldVsn, StateName, StateData, _Extra) ->
-    {ok, StateName, StateData}.
+-spec code_change(term(), state(), term()) -> {ok, state()}.
+code_change(_OldVsn, State, _Extra) -> {ok, State}.
 
 %% ====================================================================
-%% Internal functions
+%% Private functions
 %% ====================================================================
-%% @doc  Sends a message through TCP socket or fails gracefully 
-%%       (in a gen_fsm fashion)
--spec tcp_send(port(), iolist(), #state{}) -> ok.
-tcp_send(Socket, Message, State) ->
-  try gen_tcp:send(Socket, Message) of
-    ok ->
-      ok;
-    {error, closed} ->
-      ?INFO("Connection closed~n", []),
-      throw({stop, normal, State});
-    {error, timeout} ->
-      ?INFO("Connection automatically closed due to send_timeout~n", []),
-      throw({stop, normal, State});
-    {error, Error} ->
-      ?WARN("Couldn't send msg through TCP~n\tError: ~p~n", [Error]),
-      throw({stop, {error, Error}, State})
-  catch
-    _:{Exception, _} ->
-      ?WARN("Couldn't send msg through TCP~n\tError: ~p~n", [Exception]),
-      throw({stop, normal, State});
-    _:Exception ->
-      ?WARN("Couldn't send msg through TCP~n\tError: ~p~n", [Exception]),
-      throw({stop, normal, State})
-  end.
+to_json(#match_stream_event{timestamp = TS, kind = Kind, data = Data}) ->
+  [{<<"timestamp">>, TS},
+   {<<"kind">>, atom_to_binary(Kind, utf8)} |
+       lists:map(fun to_json/1, Data)];
+to_json({Key, Players}) when Key == home_players;
+                             Key == visit_players ->
+  case Players of
+    undefined -> {atom_to_binary(Key, utf8), null};
+    Players -> {atom_to_binary(Key, utf8), Players}
+  end;
+to_json({Key, {B,M}}) ->
+  {atom_to_binary(Key, utf8), [{B, M}]};
+to_json({Key, Value}) when is_number(Value);
+                           is_binary(Value);
+                           Value == true;
+                           Value == false;
+                           Value == null ->
+  {atom_to_binary(Key, utf8), Value};
+to_json({Key, Value}) ->
+  {atom_to_binary(Key, utf8),
+   erlang:iolist_to_binary(io_lib:format("~p", [Value]))}.
 
-frame(#match_stream_event{timestamp = TS, kind = Kind, data = Data}) ->
-  frame(
-    [io_lib:format("~s: ~p:~n", [dtformat(TS), Kind]) |
-     lists:map(fun({K, Players}) when K == home_players; K == visit_players ->
-                       V =
-                         case Players of
-                           undefined -> "";
-                           [] -> "";
-                           Players ->
-                             lists:map(
-                               fun({B, M}) ->
-                                       io_lib:format("\t\t ~s (~p) ~n", [M,B])
-                               end, Players)
-                         end,
-                       io_lib:format("\t~p:~n~s", [K,V]);
-                  ({K, {B, M}}) ->
-                       io_lib:format("\t~p: ~s (~p) ~n", [K,M,B]);
-                  ({K, V}) ->
-                       io_lib:format("\t~p: ~p~n", [K,V])
-               end, Data)]);
-frame(Msg) -> [Msg, "\r\n"].
+to_lower(Bin) when is_binary(Bin) ->
+  list_to_binary(string:to_lower(binary_to_list(Bin)));
+to_lower(_Other) ->
+  undefined.
 
-dtformat(TS) ->
-  {{Y, M, D}, {H, N, S}} = calendar:gregorian_seconds_to_datetime(erlang:round(TS/1000)),
-  [lpad(Y), $-, lpad(M), $-, lpad(D), $\s, lpad(H), $:, lpad(N), $:, lpad(S)].
-
-lpad(X) when X < 10 -> [$0 | integer_to_list(X)];
-lpad(X) -> integer_to_list(X).
+handle_command(<<"watch">>, ClientPid, MsgProps) ->
+  case {proplists:get_value(<<"uid">>, MsgProps, null),
+        proplists:get_value(<<"mid">>, MsgProps, null)} of
+    {null, _} -> err(ClientPid, <<"Missing parameter 'uid'">>);
+    {_, null} -> err(ClientPid, <<"Missing parameter 'mid'">>);
+    {Uid, MatchId} ->
+      try
+        ok = match_stream_user:watch(Uid, MatchId, ClientPid)
+      catch
+        _:{error, {not_found, MatchId}} ->
+          err(ClientPid, <<"Match not found: ", MatchId/binary>>);
+        _:{error, Error} ->
+          ?WARN("Watch Error: ~p~n", [Error]),
+          err(ClientPid, <<"Error trying to watch ", MatchId/binary>>)
+      end
+  end;
+handle_command(Command, ClientPid, _MsgProps) ->
+  err(ClientPid, <<"Unsupported command '", Command/binary, "'">>).

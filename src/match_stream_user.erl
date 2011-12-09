@@ -100,7 +100,7 @@ handle_call({watch, MatchId, Client}, _From, State) ->
   catch
     _:Error ->
       ?WARN("~s couldn't subscribe to ~s: ~p~n", [State#state.user_id, MatchId, Error]),
-      ok = match_stream_client:send(Client, "ERROR: Couldn't subscribe to match.\n"),
+      ok = match_stream_client:err(Client, <<"Couldn't subscribe to match.\n">>),
       {reply, {error, Error}, State, hibernate}
   end.
 

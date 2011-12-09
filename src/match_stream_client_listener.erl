@@ -73,7 +73,7 @@ code_change(_OldVsn, State, _Extra) -> {ok, State}.
 handle_request('GET', [], Req) ->
   handle_request('GET', ["index.html"], Req);
 handle_request('GET', Path, Req) ->
-  ?INFO("~p~n", [Path]),
+  ?INFO("~p~n", [filename:join(Path)]),
   Req:file(filename:join(["wwwroot"| Path]));
 handle_request(Method, Path, Req) ->
   ?WARN("~p: ~s~n\t~p~n", [Method, string:join(Path, "/"), Req]),

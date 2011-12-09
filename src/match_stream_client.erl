@@ -126,10 +126,13 @@ to_json({Key, Players}) when Key == home_players;
                              Key == visit_players ->
   case Players of
     undefined -> {atom_to_binary(Key, utf8), null};
-    Players -> {atom_to_binary(Key, utf8), Players}
+    Players -> {atom_to_binary(Key, utf8),
+                lists:map(fun({Number, Name}) ->
+                                  {Name, Number}
+                          end, Players)}
   end;
-to_json({Key, {B,M}}) ->
-  {atom_to_binary(Key, utf8), [{B, M}]};
+to_json({Key, {Number,Name}}) ->
+  {atom_to_binary(Key, utf8), [{Name, Number}]};
 to_json({Key, Value}) when is_number(Value);
                            is_binary(Value);
                            Value == true;

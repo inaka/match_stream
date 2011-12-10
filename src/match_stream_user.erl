@@ -76,7 +76,12 @@ handle_call({watch, MatchId, Client}, _From, State) ->
                                  {visit,          Match#match_stream_match.visit},
                                  {visit_players,  Match#match_stream_match.visit_players},
                                  {visit_score,    Match#match_stream_match.visit_score},
-                                 {period,         Match#match_stream_match.period}]},
+                                 {period,         Match#match_stream_match.period},
+                                 {stadium,        Match#match_stream_match.stadium} |
+                                     case Match#match_stream_match.period_start of
+                                       undefined -> [];
+                                       StartTS -> [{period_start, StartTS}]
+                                     end]},
         ok = match_stream_client:send(Client, MatchStatus),
         %% Then we subscribe to the match stream so we can get updates from now on
         %% or we disconnect the client if there's no manager to subscribe to
@@ -99,7 +104,7 @@ handle_call({watch, MatchId, Client}, _From, State) ->
     end
   catch
     _:Error ->
-      ?WARN("~s couldn't subscribe to ~s: ~p~n", [State#state.user_id, MatchId, Error]),
+      ?ERROR("~s couldn't subscribe to ~s: ~p~n", [State#state.user_id, MatchId, Error]),
       ok = match_stream_client:err(Client, <<"Couldn't subscribe to match.\n">>),
       {reply, {error, Error}, State, hibernate}
   end.

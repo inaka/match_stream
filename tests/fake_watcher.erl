@@ -10,9 +10,10 @@ from_file(Filename) ->
   Home = proplists:get_value(home, Params, <<"home">>),
   Visit = proplists:get_value(visit, Params, <<"visit">>),
   StartDate = proplists:get_value(start_date, Params, element(1, calendar:local_time())),
+  Stadium = proplists:get_value(stadium, Params, <<"Unknown Stadium">>),
   Steps = proplists:get_value(steps, Params, []),
   ok = match_stream:cancel_match(Home, Visit, StartDate),
-  {ok, MatchId} = match_stream:new_match(Home, Visit, StartDate),
+  {ok, MatchId} = match_stream:new_match(Home, Visit, StartDate, Stadium),
   lists:foreach(
     fun({sleep, Ms}) ->
             io:format("Sleeping ~p ms....~n", [Ms]),

@@ -21,4 +21,5 @@
                              home_score = 0       :: non_neg_integer(),
                              visit_score = 0      :: non_neg_integer(),
                              period = not_started :: match_stream:period(),
-                             stadium              :: binary()}).
+                             stadium              :: binary(),
+                             period_start         :: undefined | pos_integer()}).

@@ -27,7 +27,7 @@
 
 -export([start/0, stop/0]).
 -export([start/2, stop/1]).
--export([new_match/3, cancel_match/3, register_event/5, cancel_match/1, register_event/3,
+-export([new_match/4, cancel_match/3, register_event/5, cancel_match/1, register_event/3,
          matches/0, history/1, history/3, match/1]).
 -export([timestamp/0]).
 
@@ -63,7 +63,9 @@
                 {player_out,      player()} |
                 {player_in,       player()} |
                 {card,            red | yellow} |
-                {comment,         binary()}.
+                {comment,         binary()} |
+                {stadium,         binary()} |
+                {period_start,    pos_integer()}.
 
 -export_type([team/0, team_id/0, match_id/0, user_id/0, event_kind/0, event/0, player/0, data/0,
               match/0, user/0, datetime/0, date/0, period/0]).
@@ -87,13 +89,14 @@ stop() -> application:stop(?MODULE).
 %%-------------------------------------------------------------------
 %% @doc Registers a match.
 %%      StartDate is expected to be an UTC datetime
--spec new_match(team_id(), team_id(), date()) -> {ok, match_id()} | {error, {duplicated, match_id()}}.
-new_match(Home, Visit, StartDate) ->
+-spec new_match(team_id(), team_id(), date(), binary()) -> {ok, match_id()} | {error, {duplicated, match_id()}}.
+new_match(Home, Visit, StartDate, Stadium) ->
   MatchId = build_id(Home, Visit, StartDate),
   try match_stream_db:create(
         #match_stream_match{match_id  = MatchId,
                             home      = Home,
                             visit     = Visit,
+                            stadium   = Stadium,
                             start_time= StartDate}) of
     ok -> {ok, MatchId}
   catch

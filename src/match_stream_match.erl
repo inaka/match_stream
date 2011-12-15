@@ -79,7 +79,7 @@ handle_cast(Event, State) ->
                                       Event#match_stream_event.match_id,
                                       length(gen_event:which_handlers(event_manager(Event#match_stream_event.match_id)))]),
     ok = match_stream_db:match_update(Event#match_stream_event.match_id,
-                                fun(Match) -> update_match(Match, Event) end),
+                                      fun(Match) -> update_match(Match, Event) end),
     ok = match_stream_db:event_log(Event),
     ok = gen_event:notify(event_manager(State#state.match_id), Event),
     {noreply, State, hibernate}
@@ -143,7 +143,9 @@ update_match(Match, #match_stream_event{kind = stop}) ->
   Match#match_stream_match{period = ended,
                            period_start = undefined};
 update_match(Match, #match_stream_event{kind = goal, data = Data}) ->
-  case {proplists:get_value(team, Data), Match#match_stream_match.home, Match#match_stream_match.visit} of
+  case {proplists:get_value(team, Data),
+        Match#match_stream_match.home#match_stream_team.team_id,
+        Match#match_stream_match.visit#match_stream_team.team_id} of
     {Team, Team, _} ->
       Match#match_stream_match{home_score = Match#match_stream_match.home_score + 1};
     {Team, _, Team} ->
@@ -155,7 +157,8 @@ update_match(Match, #match_stream_event{kind = card, data = Data}) ->
   case {proplists:get_value(card, Data),
         proplists:get_value(player, Data),
         proplists:get_value(team, Data),
-        Match#match_stream_match.home, Match#match_stream_match.visit} of
+        Match#match_stream_match.home#match_stream_team.team_id,
+        Match#match_stream_match.visit#match_stream_team.team_id} of
     {yellow, _, _, _, _} -> Match;
     {red, Out = {Number, _Name}, Team, Team, _} ->
       Match#match_stream_match{home_players =
@@ -180,7 +183,8 @@ update_match(Match, #match_stream_event{kind = substitution, data = Data}) ->
   case {proplists:get_value(player_in, Data),
         proplists:get_value(player_out, Data),
         proplists:get_value(team, Data),
-        Match#match_stream_match.home, Match#match_stream_match.visit} of
+        Match#match_stream_match.home#match_stream_team.team_id,
+        Match#match_stream_match.visit#match_stream_team.team_id} of
     {In, Out = {Number, _Name}, Team, Team, _} ->
       Match#match_stream_match{home_players =
                                  case lists:keytake(Number, 1,

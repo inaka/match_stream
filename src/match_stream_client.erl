@@ -122,6 +122,10 @@ to_json(#match_stream_event{timestamp = TS, kind = Kind, data = Data}) ->
   [{<<"timestamp">>, TS},
    {<<"kind">>, atom_to_binary(Kind, utf8)} |
        lists:map(fun to_json/1, Data)];
+to_json({Key, Team}) when is_record(Team, match_stream_team) ->
+  {atom_to_binary(Key, utf8), to_json(Team)};
+to_json(#match_stream_team{team_id = I, name = N, division = D}) ->
+  [{<<"team_id">>, I}, {<<"name">>, N}, {<<"division">>, D}];
 to_json({Key, Players}) when Key == home_players;
                              Key == visit_players ->
   case Players of

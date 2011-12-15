@@ -129,9 +129,6 @@ handle_cast(Event, State) ->
 %% @hidden
 -spec handle_info(term(), state()) -> {noreply, state(), hibernate} | {stop, normal, state()}.
 handle_info(timeout, State) ->
-  case match_stream_db:user(State#state.user_id) of
-    not_found ->
-      match_stream_db:create(#match_stream_user{user_id = State#state.user_id});
     _User ->
       match_stream_db:user_update(
         State#state.user_id,

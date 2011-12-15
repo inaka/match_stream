@@ -7,13 +7,23 @@
 -spec from_file(string()) -> ok.
 from_file(Filename) ->
   {ok, Params} = file:consult(Filename),
-  Home = proplists:get_value(home, Params, <<"home">>),
-  Visit = proplists:get_value(visit, Params, <<"visit">>),
+  HomeParams = proplists:get_value(home, Params, []),
+  Home = #match_stream_team{team_id = proplists:get_value(id, HomeParams, <<"home">>),
+                            name = proplists:get_value(name, HomeParams, <<"home team">>),
+                            division = proplists:get_value(division, HomeParams, <<"home division">>)},
+  VisitParams = proplists:get_value(visit, Params, []),
+  Visit = #match_stream_team{team_id = proplists:get_value(id, VisitParams, <<"visit">>),
+                             name = proplists:get_value(name, VisitParams, <<"visit team">>),
+                             division = proplists:get_value(division, VisitParams, <<"visit division">>)},
   StartDate = proplists:get_value(start_date, Params, element(1, calendar:local_time())),
   Stadium = proplists:get_value(stadium, Params, <<"Unknown Stadium">>),
   Steps = proplists:get_value(steps, Params, []),
-  ok = match_stream:cancel_match(Home, Visit, StartDate),
-  {ok, MatchId} = match_stream:new_match(Home, Visit, StartDate, Stadium),
+  ok = match_stream:set_team(Home),
+  ok = match_stream:set_team(Visit),
+  ok = match_stream:cancel_match(Home#match_stream_team.team_id,
+                                 Visit#match_stream_team.team_id, StartDate),
+  {ok, MatchId} = match_stream:new_match(Home#match_stream_team.team_id,
+                                         Visit#match_stream_team.team_id, StartDate, Stadium),
   lists:foreach(
     fun({sleep, Ms}) ->
             io:format("Sleeping ~p ms....~n", [Ms]),
@@ -53,17 +63,18 @@ parse(MatchId, PlayerEvent, Data) when PlayerEvent == shot;
                           home = Home, visit = Visit,
                           visit_players = VisitPlayers} =
                            match_stream_db:match(MatchId),
-      case proplists:get_value(player_team, Data,
-                               proplists:get_value(team, Data)) of
-        Home ->
+      case {proplists:get_value(player_team, Data,
+                                proplists:get_value(team, Data)),
+            Home#match_stream_team.team_id, Visit#match_stream_team.team_id} of
+        {HomeId, HomeId, _} ->
           [{player, {Number, proplists:get_value(Number, HomePlayers, <<"N/N">>)}} |
              lists:keydelete(player, 1, Data)];
-        Visit ->
+        {VisitId, _, VisitId} ->
           [{player, {Number, proplists:get_value(Number, VisitPlayers, <<"N/N">>)}} |
              lists:keydelete(player, 1, Data)];
-        undefined ->
+        {undefined, HomeId, _} ->
           [{player, {Number, proplists:get_value(Number, HomePlayers, <<"N/N">>)}},
-           {team, Home} | lists:keydelete(player, 1, Data)]
+           {team, HomeId} | lists:keydelete(player, 1, Data)]
       end
   end;
 parse(MatchId, substitution, Data) ->
@@ -75,16 +86,18 @@ parse(MatchId, substitution, Data) ->
                           home = Home, visit = Visit,
                           visit_players = VisitPlayers} =
                            match_stream_db:match(MatchId),
-      case proplists:get_value(team, Data) of
-        Home ->
+      case {proplists:get_value(team, Data),
+            Home#match_stream_team.team_id,
+            Visit#match_stream_team.team_id} of
+        {HomeId, HomeId, _} ->
           [{player_out, {Number, proplists:get_value(Number, HomePlayers, <<"N/N">>)}} |
              lists:keydelete(player_out, 1, Data)];
-        Visit ->
+        {VisitId, _, VisitId} ->
           [{player_out, {Number, proplists:get_value(Number, VisitPlayers, <<"N/N">>)}} |
              lists:keydelete(player_out, 1, Data)];
-        undefined ->
+        {undefined, HomeId, _} ->
           [{player_out, {Number, proplists:get_value(Number, HomePlayers, <<"N/N">>)}},
-           {team, Home} | lists:keydelete(player_out, 1, Data)]
+           {team, HomeId} | lists:keydelete(player_out, 1, Data)]
       end
   end;
 parse(_, _, Data) -> Data.

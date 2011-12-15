@@ -11,20 +11,26 @@
 
 -include("match_stream.hrl").
 
--export([create/1, match_update/2, user_update/2, match_all/0, user_all/0, match/1, user/1,
-         match_delete/1, user_delete/1, event_log/1, match_history/1]).
+-export([create/1,
+         match_update/2, user_update/2, team_update/2,
+         match_all/0, user_all/0, team_all/0,
+         match/1, user/1, team/1,
+         match_delete/1, user_delete/1, team_delete/1,
+         event_log/1, match_history/1]).
 -export([start_link/0, init/1]).
 
 %% =================================================================================================
 %% External functions
 %% =================================================================================================
-%% @doc Creates a match or an user
-%% @throws duplicated
--spec create(match_stream:match() | match_stream:user()) -> ok.
+%% @doc Creates a match, a team or an user.
+%%      Fails silently (it's implemented with gen_server:cast/2) if it already exists
+-spec create(match_stream:match() | match_stream:user() | match_stream:team()) -> ok.
 create(Object = #match_stream_match{match_id = MatchId}) ->
   make_call(write, {create, <<"match-", MatchId/binary>>, Object});
 create(Object = #match_stream_user{user_id = UserId}) ->
-  make_call(write, {create, <<"user-", UserId/binary>>, Object}).
+  make_call(write, {create, <<"user-", UserId/binary>>, Object});
+create(Object = #match_stream_team{team_id = TeamId}) ->
+  make_call(write, {create, <<"team-", TeamId/binary>>, Object}).
 
 %% @doc Updates an existing match
 %% @throws not_found
@@ -38,6 +44,12 @@ match_update(MatchId, UpdateFun) ->
 user_update(UserId, UpdateFun) ->
   make_call(write, {update, <<"user-", UserId/binary>>, UpdateFun}).
 
+%% @doc Updates an existing team
+%% @throws not_found
+-spec team_update(match_stream:team_id(), fun((match_stream:team()) -> match_stream:team())) -> ok.
+team_update(TeamId, UpdateFun) ->
+  make_call(write_once, {update, <<"team-", TeamId/binary>>, UpdateFun}).
+
 %% @doc Returns the list of available matches
 -spec match_all() -> [match_stream:match_id()].
 match_all() ->
@@ -48,6 +60,11 @@ match_all() ->
 user_all() ->
   make_call(read, {all, "user-*"}).
 
+%% @doc Returns the list of available teams
+-spec team_all() -> [match_stream:team_id()].
+team_all() ->
+  make_call(read, {all, "team-*"}).
+
 %% @doc Returns a match
 -spec match(match_stream:match_id()) -> match_stream:match() | not_found.
 match(MatchId) ->
@@ -57,6 +74,11 @@ match(MatchId) ->
 -spec user(match_stream:user_id()) -> match_stream:user() | not_found.
 user(UserId) ->
   make_call(read, {get, <<"user-", UserId/binary>>}).
+
+%% @doc Returns a team
+-spec team(match_stream:team_id()) -> match_stream:team() | not_found.
+team(TeamId) ->
+  make_call(read, {get, <<"team-", TeamId/binary>>}).
 
 %% @doc Deletes a match.
 %% Silently ignores the call if the match is not there
@@ -70,6 +92,12 @@ match_delete(MatchId) ->
 -spec user_delete(match_stream:user_id()) -> ok.
 user_delete(UserId) ->
   make_call(write, {delete, <<"user-", UserId/binary>>}).
+
+%% @doc Deletes a team.
+%% Silently ignores the call if the team is not there
+-spec team_delete(match_stream:team_id()) -> ok.
+team_delete(TeamId) ->
+  make_call(write, {delete, <<"team-", TeamId/binary>>}).
 
 %% @doc Logs an event
 %% @throws not_found

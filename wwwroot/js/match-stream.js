@@ -62,24 +62,24 @@ function update_match(data) {
 		window.match.period_start = data.timestamp;
 		break;
 	case "goal":
-		if(window.match.home == data.team)
+		if(window.match.home.team_id == data.team)
 			window.match.home_score++;
-		else if(window.match.visit == data.team)
+		else if(window.match.visit.team_id == data.team)
 			window.match.visit_score++;
 		break;
 	case "card":
 		if(data.card == "red") {
-			if(window.match.home == data.team)
+			if(window.match.home.team_id == data.team)
 				for(var n in data.player) delete window.match.home_players[n];
-			else if(window.match.visit == data.team)
+			else if(window.match.visit.team_id == data.team)
 				for(var n in data.player) delete window.match.visit_players[n];
 		}
 		break;
 	case "substitution":
-		if(window.match.home == data.team) {
+		if(window.match.home.team_id == data.team) {
 			for(var n in data.player_out) delete window.match.home_players[n];
 			for(var n in data.player_in) window.match.home_players[n] = data.player_in[n];
-		} else if(window.match.visit == data.team) {
+		} else if(window.match.visit.team_id == data.team) {
 			for(var n in data.player_out) delete window.match.visit_players[n];
 			for(var n in data.player_in) window.match.visit_players[n] = data.player_in[n];
 		}
@@ -124,13 +124,13 @@ function show_event(data) {
 }
 
 function update_status() {
-	$('#home-crest-img')[0].src = "img/teams/" + window.match.home + ".png";
-	$('#visit-crest-img')[0].src = "img/teams/" + window.match.visit + ".png";
+	$('#home-crest-img')[0].src = "img/teams/" + window.match.home.team_id + ".png";
+	$('#visit-crest-img')[0].src = "img/teams/" + window.match.visit.team_id + ".png";
 	$('#score').text(window.match.home_score + "-" + window.match.visit_score);
 	$('#time').text(fancy_period(window.match.period, window.match.timestamp, window.match.period_start));
 	$('#stadium').text(window.match.stadium);
-	$('#home-name').text(window.match.home.toUpperCase()); //TODO: Improve
-	$('#visit-name').text(window.match.visit.toUpperCase()); //TODO: Improve
+	$('#home-name').text(window.match.home.name);
+	$('#visit-name').text(window.match.visit.name);
 }
 
 function fancy_period(period, current) {
@@ -168,43 +168,43 @@ function translate(data) {
 	case "penalties": return "El partido se definir&aacute; por penales";
 	case "shot":
 		for(var n in data.player)
-			return "Disparo al arco de " + n + " (" + data.team.toUpperCase() + ")";
+			return "Disparo al arco de " + n + " (" + team_name(data.team) + ")";
 	case "save":
 		for(var n in data.player)
-			return "Atajada de " + n + " (" + data.team.toUpperCase() + ")";
+			return "Atajada de " + n + " (" + team_name(data.team) + ")";
 	case "goal":
 		for(var n in data.player)
-			return "GOL de " + data.team.toUpperCase() + "!! Lo hizo " +  n;
+			return "GOL de " + team_name(data.team) + "!! Lo hizo " +  n;
 	case "corner":
-		return "Tiro de esquina para " + data.team.toUpperCase();
+		return "Tiro de esquina para " + team_name(data.team);
 	case "goalkick":
-		return "Saque desde el arco para " + data.team.toUpperCase();
+		return "Saque desde el arco para " + team_name(data.team);
 	case "offside":
 		for(var n in data.player)
-			return "Posici&oacute;n adelantada de " + n + " (" + data.team.toUpperCase() + ")";
+			return "Posici&oacute;n adelantada de " + n + " (" + team_name(data.team) + ")";
 	case "foul":
 		for(var n in data.player)
-			return "Infracci&oacute;n de " + n + " (" + data.team.toUpperCase() + ")";
+			return "Infracci&oacute;n de " + n + " (" + team_name(data.team) + ")";
 	case "penalty":
 		for(var n in data.player)
-			return "Penal para " + data.team.toUpperCase() + ". Lo patea " +  n;
+			return "Penal para " + team_name(data.team) + ". Lo patea " +  n;
 	case "freekick":
 		for(var n in data.player)
-			return "Tiro libre para " + data.team.toUpperCase() + ". Lo patea " +  n;
+			return "Tiro libre para " + team_name(data.team) + ". Lo patea " +  n;
 	case "card":
 		if(data.card == "red")
 			for(var n in data.player)
-				return data.team.toUpperCase() + " se queda con un hombre menos, expulsado " +  n;
+				return team_name(data.team) + " se queda con un hombre menos, expulsado " +  n;
 		else
 			for(var n in data.player)
-				return n + " (" + data.team.toUpperCase() + ") es amonestado";
+				return n + " (" + team_name(data.team) + ") es amonestado";
 	case "substitution":
 		var p_in, p_out;
 		for(var n in data.player_in) p_in = n;
 		for(var n in data.player_out) p_out = n;
-		return "Cambio en " + data.team.toUpperCase() + ": Entra " + p_in + ". Se retira " + p_out;
+		return "Cambio en " + team_name(data.team) + ": Entra " + p_in + ". Se retira " + p_out;
 	case "throwin":
-		return "Lateral para " + data.team.toUpperCase();
+		return "Lateral para " + team_name(data.team);
 	default:
 		return data.kind
 	}
@@ -275,8 +275,7 @@ function getMatchId() {
     return null;
 }
 
-function updateClock()
-{
+function updateClock() {
 	if(window.match && window.match.period) {
 		if(window.match.period != "not_started" &&
 				window.match.period != "ended")
@@ -284,4 +283,11 @@ function updateClock()
 		$('#time').text(fancy_period(window.match.period, window.match.timestamp, window.match.period_start));
 	}
 	return setTimeout("updateClock()",1000);
+}
+
+function team_name(team_id) {
+	if(window.match && window.match.home && window.match.home.team_id == team_id && window.match.home.name)
+		return window.match.home.name;
+	if(window.match && window.match.visit && window.match.visit.team_id == team_id && window.match.visit.name)
+		return window.match.visit.name;
 }

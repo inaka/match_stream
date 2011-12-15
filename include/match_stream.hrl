@@ -8,13 +8,13 @@
 -record(match_stream_user, {user_id :: match_stream:user_id(),
                             visit_count = 1 :: pos_integer()}).
 
--record(match_stream_team, {id        :: match_stream:team_id(),
+-record(match_stream_team, {team_id   :: match_stream:team_id(),
                             name      :: binary(),
                             division  :: match_stream:division()}).
 
 -record(match_stream_match, {match_id             :: match_stream:match_id(),
-                             home                 :: match_stream:team_id(),
-                             visit                :: match_stream:team_id(),
+                             home                 :: match_stream:team(),
+                             visit                :: match_stream:team(),
                              start_time           :: match_stream:date(),
                              home_players         :: [match_stream:player()],
                              visit_players        :: [match_stream:player()],

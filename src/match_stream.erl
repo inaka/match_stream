@@ -28,7 +28,7 @@
 -export([start/0, stop/0]).
 -export([start/2, stop/1]).
 -export([new_match/4, cancel_match/3, register_event/5, cancel_match/1, register_event/3,
-         matches/0, history/1, history/3, match/1]).
+         matches/0, history/1, history/3, match/1, set_team/1, team/1]).
 -export([timestamp/0]).
 
 -type date() :: {2000..3000, 1..12, 1..31}.
@@ -49,10 +49,10 @@
 -type user() :: #match_stream_user{}.
 -type period() :: not_started | first | halftime | last | penalties | ended.
 
--type data() :: {home,            team_id()} |
+-type data() :: {home,            team()} |
                 {home_players,    [player()]} |
                 {home_score,      non_neg_integer()} |
-                {visit,           team_id()} |
+                {visit,           team()} |
                 {visit_players,   [player()]} |
                 {visit_score,     non_neg_integer()} |
                 {period,          period()} |
@@ -87,21 +87,40 @@ stop() -> application:stop(?MODULE).
 %%-------------------------------------------------------------------
 %% SERVER API
 %%-------------------------------------------------------------------
+%% @doc Registers a team.
+%%      It's created if it doesn't exist, updated otherwise.
+-spec set_team(team()) -> ok.
+set_team(Team) ->
+  case match_stream_db:team(Team#match_stream_team.team_id) of
+    not_found -> match_stream_db:create(Team);
+    _Team -> match_stream_db:team_update(Team#match_stream_team.team_id, fun(_) -> Team end)
+  end.
+
+%% @doc Returns a team.
+-spec team(team_id()) -> not_found | team().
+team(TeamId) -> match_stream_db:team(TeamId).
+
 %% @doc Registers a match.
 %%      StartDate is expected to be an UTC datetime
--spec new_match(team_id(), team_id(), date(), binary()) -> {ok, match_id()} | {error, {duplicated, match_id()}}.
-new_match(Home, Visit, StartDate, Stadium) ->
-  MatchId = build_id(Home, Visit, StartDate),
-  try match_stream_db:create(
-        #match_stream_match{match_id  = MatchId,
-                            home      = Home,
-                            visit     = Visit,
-                            stadium   = Stadium,
-                            start_time= StartDate}) of
-    ok -> {ok, MatchId}
-  catch
-    _:duplicated ->
-      {error, {duplicated, MatchId}}
+-spec new_match(team_id(), team_id(), date(), binary()) -> {ok, match_id()} | {error, {duplicated, match_id()} | {invalid_team, team_id()}}.
+new_match(HomeId, VisitId, StartDate, Stadium) ->
+  case {match_stream_db:team(HomeId), match_stream_db:team(VisitId)} of
+    {not_found, _} -> {error, {invalid_team, HomeId}};
+    {_, not_found} -> {error, {invalid_team, VisitId}};
+    {Home, Visit} ->
+      MatchId = build_id(HomeId, VisitId, StartDate),
+      case match_stream_db:match(MatchId) of
+        not_found ->
+          ok = match_stream_db:create(
+                 #match_stream_match{match_id  = MatchId,
+                                     home      = Home,
+                                     visit     = Visit,
+                                     stadium   = Stadium,
+                                     start_time= StartDate}),
+          {ok, MatchId};
+        _Match ->
+          {error, {duplicated, MatchId}}
+      end
   end.
 
 %% @doc Cancels a match
@@ -134,7 +153,7 @@ register_event(MatchId, Kind, Data) ->
 matches() ->
   match_stream_db:match_all().
 
-%% @doc List of available matches
+%% @doc Returns a match
 -spec match(match_id()) -> not_found | match_stream:match().
 match(MatchId) ->
   match_stream_db:match(MatchId).

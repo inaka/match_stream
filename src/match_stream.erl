@@ -182,6 +182,7 @@ timestamp() ->
 %% @private
 -spec start(any(), any()) -> {ok, pid()}.
 start(_StartType, _StartArgs) ->
+  application:load(erldis),
   match_stream_sup:start_link().
 
 %% @private

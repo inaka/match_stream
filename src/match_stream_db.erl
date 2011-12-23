@@ -139,7 +139,7 @@ make_call(Type, Call) ->
     read -> match_stream_db_reader:make_call(Call);
     write -> match_stream_db_writer:make_call(Call);
     write_once ->
-      case {node(), node(global:safe_whereis_name(match_stream_db_writer))} of
+      case {node(), node(global:whereis_name(match_stream_db_writer))} of
         {Here, Here} ->
           match_stream_db_writer:make_call(Call);
         {_, _} -> %%HACK: It will be written by the local node, no need to call it from here too

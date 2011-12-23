@@ -10,14 +10,14 @@
     <script src="js/json2.js"></script>
 <![endif]-->
 <script type="text/javascript">
-  var query = window.location.search.substring(1);
-  var vars = query.split("&");
-  var ms_options = {};
-  for (var i=0; i<vars.length; i++) {
-      var pair = vars[i].split("=");
-      window.ms_options[pair[0]] = pair[1];
-  }
-  connect(ms_options);
+	var query = window.location.search.substring(1);
+	var vars = query.split("&");
+	var ms_options = {};
+	for ( var i = 0; i < vars.length; i++) {
+		var pair = vars[i].split("=");
+		window.ms_options[pair[0]] = pair[1];
+	}
+	connect(ms_options);
 </script>
 </head>
 <body>
@@ -27,7 +27,7 @@
 				<div id="headerContent" style="visibility: visible; display: block;">
 					<div id="home">
 						<div id="home-crest" class="crest">
-							<img id="home-crest-img"/>
+							<img id="home-crest-img" />
 						</div>
 						<div id="home-name" class="team-name shadowed"></div>
 					</div>
@@ -37,7 +37,7 @@
 					</div>
 					<div id="visit">
 						<div id="visit-crest" class="crest">
-							<img id="visit-crest-img"/>
+							<img id="visit-crest-img" />
 						</div>
 						<div id="visit-name" class="team-name shadowed"></div>
 					</div>
@@ -48,6 +48,30 @@
 		<div id="content-column">
 			<div id="stream">
 				<div id="footer"></div>
+				<div id="comments">
+					<fieldset>
+						<ul class="clearfix">
+							<li><textarea id="commentbox" rows="3" cols="80"
+									onblur="hideUserInfoBox()"
+									onkeydown="limitCommentLength($('#commentbox'), $('#commentbox-remaining'), 140)"
+									onkeyup="limitCommentLength($('#commentbox'), $('#commentbox-remaining'), 140)"
+									name="" readonly="readonly" onclick="commentboxClicked();"
+									class="ftxt" style="height: 20px;">Write your comment here...</textarea>
+								<div style="display: none" id="commentbox-remaining"></div></li>
+							<li>
+								<button id="comment-button" onclick="postComment()" class="fbtn">COMMENT</button>
+								<div id="user-info-box">
+									<img style="width: 30px; vertical-align: middle"
+										src="images/twitterbird.png" alt=""> <span
+										id="logged-in-username"></span><br> <img
+										style="width: 30px; vertical-align: middle"
+										src="images/closebutton.png" alt=""> <a href="#"
+										onclick="logoutTwitter();return false">Log out</a>
+								</div>
+							</li>
+						</ul>
+					</fieldset>
+				</div>
 				<ul id="events">
 				</ul>
 			</div>

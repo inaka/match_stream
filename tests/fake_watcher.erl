@@ -22,6 +22,7 @@ from_file(Filename) ->
   ok = match_stream:set_team(Visit),
   ok = match_stream:cancel_match(Home#match_stream_team.team_id,
                                  Visit#match_stream_team.team_id, StartDate),
+  timer:sleep(1000),
   {ok, MatchId} = match_stream:new_match(Home#match_stream_team.team_id,
                                          Visit#match_stream_team.team_id, StartDate, Stadium),
   lists:foreach(

@@ -1,8 +1,8 @@
 function connect(options) {
 	if(options.port)
-		socket = new io.Socket(location.hostname, {port : parseInt(options.port,10)});
+		socket = new io.Socket(location.hostname, {rememberTransport: false, reconnect: false, port : parseInt(options.port,10)});
 	else
-		socket = new io.Socket(location.hostname);
+		socket = new io.Socket(location.hostname, {rememberTransport: false, reconnect: false});
 	
 	socket.on('message', function(data) {
 		if (data.error)
@@ -13,8 +13,10 @@ function connect(options) {
 
 	window.mid = getMatchId();
 	window.uuid = getUserId();
+	$('#commentbox').attr('readonly', !isLoggedInTwitter());
 
     socket.on('connect', function(){
+    	console.log("trying to watch " + window.mid),
         socket.send({
         	"command":"watch",
             "uid":window.uuid, 
@@ -121,6 +123,7 @@ function show_event(data) {
 	li.append(box);
 
 	$('#events').append(li);
+	$('#events')[0].scrollTop = $('#events')[0].scrollHeight;
 }
 
 function update_status() {

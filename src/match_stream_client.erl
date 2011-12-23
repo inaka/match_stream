@@ -162,6 +162,7 @@ handle_command(<<"watch">>, ClientPid, MsgProps) ->
         ok = match_stream_user:watch(Uid, MatchId, ClientPid)
       catch
         _:{error, {not_found, MatchId}} ->
+          ?WARN("Match not found: ~p~n", [MatchId]),
           err(ClientPid, <<"Match not found: ", MatchId/binary>>);
         _:{error, Error} ->
           ?WARN("Watch Error: ~p~n", [Error]),

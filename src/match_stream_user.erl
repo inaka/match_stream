@@ -31,8 +31,11 @@ watch(UserId, MatchId, Client) ->
       {error, {already_started, Pid}} -> Pid
     end,
   case gen_server:call(UserPid, {watch, MatchId, Client}, 20000) of
-    ok -> ok;
-    {error, Error} -> throw({error, Error})
+    ok ->
+      ?INFO("~s watching ~s...~n", [UserId, MatchId]),
+      ok;
+    {error, Error} ->
+      throw({error, Error})
   end.
 
 %% =================================================================================================
@@ -97,10 +100,15 @@ handle_call({watch, MatchId, Client}, _From, State) ->
               ok = match_stream_user_handler:add_handler(MatchId, State#state.user_id, Client),
               erlang:monitor(process, erlang:whereis(match_stream_match:event_manager(MatchId)))
           end,
-        ClientRef = erlang:monitor(process, Client),
-        {reply, ok,
-         State#state{matches = [{Client, MatchId, ClientRef, MatchRef} | State#state.matches]},
-         hibernate}
+        case MatchRef of
+          undefined ->
+            {reply, ok, State, hibernate};
+          MatchRef ->
+            ClientRef = erlang:monitor(process, Client),
+            {reply, ok,
+             State#state{matches = [{Client, MatchId, ClientRef, MatchRef} | State#state.matches]},
+             hibernate}
+        end
     end
   catch
     _:Error ->

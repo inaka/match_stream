@@ -85,6 +85,7 @@ handle_cast(Event, State) ->
     {noreply, State, hibernate}
   catch
     _:Error ->
+      ?ERROR("Error processing ~p on ~s: ~p~n", [Event#match_stream_event.kind, State#state.match_id, Error]),
       {stop, Error, State}
   end.
 

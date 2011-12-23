@@ -47,8 +47,7 @@
 		</div>
 		<div id="content-column">
 			<div id="stream">
-				<div id="footer"></div>
-				<div id="comments">
+				<div id="footer">
 					<fieldset>
 						<ul class="clearfix">
 							<li><textarea id="commentbox" rows="3" cols="80"
@@ -56,17 +55,15 @@
 									onkeydown="limitCommentLength($('#commentbox'), $('#commentbox-remaining'), 140)"
 									onkeyup="limitCommentLength($('#commentbox'), $('#commentbox-remaining'), 140)"
 									name="" readonly="readonly" onclick="commentboxClicked();"
-									class="ftxt" style="height: 20px;">Write your comment here...</textarea>
+									class="ftxt">Write your comment here...</textarea>
 								<div style="display: none" id="commentbox-remaining"></div></li>
 							<li>
 								<button id="comment-button" onclick="postComment()" class="fbtn">COMMENT</button>
 								<div id="user-info-box">
-									<img style="width: 30px; vertical-align: middle"
-										src="images/twitterbird.png" alt=""> <span
-										id="logged-in-username"></span><br> <img
-										style="width: 30px; vertical-align: middle"
-										src="images/closebutton.png" alt=""> <a href="#"
-										onclick="logoutTwitter();return false">Log out</a>
+									<img src="img/twitterbird.png" alt="">
+									<span id="logged-in-username"></span><br />
+									<img src="img/closebutton.png" alt="">
+									<a href="#" onclick="logoutTwitter();return false">Log out</a>
 								</div>
 							</li>
 						</ul>

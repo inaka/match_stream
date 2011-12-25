@@ -15,7 +15,7 @@
 
 -export([start/1]).
 -export([init/1, handle_event/2, handle_call/2, handle_info/2, terminate/2, code_change/3]).
--export([send/2, err/2, disconnect/1]).
+-export([reply/3, send/2, err/2, disconnect/1]).
 
 -record(state, {connected = false :: boolean()}).
 -type state() :: #state{}.
@@ -50,7 +50,17 @@ start(ClientPid) ->
 -spec send(pid(), #match_stream_event{}) -> ok.
 send(Client, Event) ->
   ?DEBUG("socketio client (~p) sending ~p~n", [Client, Event]),
-  EncodedMessage = #msg{content = to_json(Event), json = true},
+  EncodedMessage = #msg{content = to_json("event", Event), json = true},
+  case rpc:pinfo(Client) of
+    undefined -> throw({dead_client, Client});
+    _ -> socketio_client:send(Client, EncodedMessage)
+  end.
+
+%% @doc Notifies a reply to the client
+-spec reply(pid(), binary(), binary()) -> ok.
+reply(Client, Source, Response) ->
+  ?DEBUG("socketio client (~p) replying ~p:~p~n", [Client, Source, Response]),
+  EncodedMessage = #msg{content = to_json(Source, Response), json = true},
   case rpc:pinfo(Client) of
     undefined -> throw({dead_client, Client});
     _ -> socketio_client:send(Client, EncodedMessage)
@@ -118,6 +128,10 @@ code_change(_OldVsn, State, _Extra) -> {ok, State}.
 %% ====================================================================
 %% Private functions
 %% ====================================================================
+to_json(Source, Content) ->
+  [{<<"source">>, Source,
+    <<"content">>, to_json(Content)}].
+
 to_json(#match_stream_event{timestamp = TS, kind = Kind, data = Data}) ->
   [{<<"timestamp">>, TS},
    {<<"kind">>, atom_to_binary(Kind, utf8)} |
@@ -145,7 +159,9 @@ to_json({Key, Value}) when is_number(Value);
   {atom_to_binary(Key, utf8), Value};
 to_json({Key, Value}) ->
   {atom_to_binary(Key, utf8),
-   erlang:iolist_to_binary(io_lib:format("~p", [Value]))}.
+   erlang:iolist_to_binary(io_lib:format("~p", [Value]))};
+to_json(Bin) when is_binary(Bin) ->
+  Bin.
 
 to_lower(Bin) when is_binary(Bin) ->
   list_to_binary(string:to_lower(binary_to_list(Bin)));

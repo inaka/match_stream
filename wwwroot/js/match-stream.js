@@ -7,19 +7,21 @@ function connect(options) {
 	socket.on('message', function(data) {
 		if (data.error)
 			alert(JSON.stringify(data.desc));
-		else
-			append(data)
+		else if(data.source == "event")
+			append(data.content);
+		else if(data.source == "twitter")
+			twitter(data.content)
 	});
 
 	window.mid = getMatchId();
-	window.uuid = getUserId();
-	$('#commentbox').attr('readonly', !isLoggedInTwitter());
+	window.user = getUserInfo();
+	$('#commentbox').attr('readonly', !window.user.twitter);
 
     socket.on('connect', function(){
     	console.log("trying to watch " + window.mid),
         socket.send({
         	"command":"watch",
-            "uid":window.uuid, 
+            "uid":window.user.id, 
             "mid":window.mid
         });
         updateClock();
@@ -214,34 +216,34 @@ function translate(data) {
 }
 
 //Get the user id from local storage or cookie
-function getUserId() {
+function getUserInfo() {
     var thereIsLocalStorage = typeof window.localStorage!=='undefined';
-    var uuid;
+    var user;
     if(thereIsLocalStorage) {  
-        uuid = localStorage['uuid'];
+        user = localStorage['user'];
     } else {
-        uuid = new RegExp('(?:^|; )' +
-            encodeURIComponent('uuid') + 
+        user = new RegExp('(?:^|; )' +
+            encodeURIComponent('user') + 
             '=([^;]*)').exec(document.cookie);
-        if (uuid != null) { uuid = uuid[1]; }
+        if (user != null) { user = user[1]; }
     }
-    if (uuid == null)
-    	uuid = setUserId();
-    return uuid;
+    if (user == null)
+    	user = setUserInfo();
+    return user;
 }
 
 //Set user id to local storage or cookie
-function setUserId() {
-	var uuid = guid();
+function setUserInfo() {
+	var user = {"id": guid()};
     var thereIsLocalStorage = typeof window.localStorage!=='undefined';
     if(thereIsLocalStorage) {
-        localStorage['uuid'] = uuid;
+        localStorage['user'] = user;
     } else {
         var dt = new Date();
         dt.setTime(dt.getTime() + 31536000000);
-        document.cookie="uuid=" + uuid + "; expires=" + dt.toGMTString() + "; path=/";
+        document.cookie="user=" + user + "; expires=" + dt.toGMTString() + "; path=/";
     }
-    return uuid;
+    return user;
 }
 
 function guid() {
@@ -293,4 +295,13 @@ function team_name(team_id) {
 		return window.match.home.name;
 	if(window.match && window.match.visit && window.match.visit.team_id == team_id && window.match.visit.name)
 		return window.match.visit.name;
+}
+
+// --------- TWITTER --------------------------------------------------
+function logoutTwitter() {
+	window.user.twitter = null;
+	storeUserInfo();
+	hideUserInfoBox();
+	$('#logged-in-username').html('');
+	$('div#tweets .spotlight').addClass('hidden-admin');
 }

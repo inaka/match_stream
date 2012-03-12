@@ -66,8 +66,9 @@ wait_for_socket({socket_ready, Socket}, State) ->
     end,
   error_logger:info_msg("~p connected~n", [PeerPort]),
   ok = inet:setopts(Socket, [{active, once}, {packet, 0}, binary]),
-  {next_state, wait_for_params, State#state{socket   = Socket,
-                                            peerport = PeerPort}};
+  NewState = State#state{socket = Socket, peerport = PeerPort},
+  ok = tcp_send(Socket, "Welcome to Match Stream.\nTo watch the current game use: V:2:<your-name>\n", NewState),
+  {next_state, wait_for_params, NewState};
 wait_for_socket(timeout, State) ->
   {stop, timeout, State};
 wait_for_socket(Other, State) ->
@@ -79,6 +80,19 @@ wait_for_socket(Other, State) ->
 wait_for_params({data, Payload}, State = #state{peerport = PeerPort}) ->
   error_logger:info_msg("Data received:~p~n",[Payload]),
   case binary:split(Payload, [<<":">>, <<$\r>>, <<$\n>>], [global]) of
+    [<<"V">>, <<"2">>, Uid | _] ->
+      try
+        case match_stream:matches() of
+          [MatchId | _] ->
+            ok = match_stream_user:watch(Uid, MatchId, self());
+          [] ->
+            ok = tcp_send(State#state.socket, frame(io_lib:format("ERROR: No matches to watch~n", [])), State)
+        end
+      catch
+        Type:Error ->
+          ok = tcp_send(State#state.socket, frame(io_lib:format("ERROR: ~p~n", [Error])), State),
+          throw({stop, {error, Type, Error}, State})
+      end;
     [<<"VERSION">>, <<"1">>, <<"CONNECT">>, Uid, <<"MATCH">>, MatchId | _] ->
       try
         ok = match_stream_user:watch(Uid, MatchId, self())

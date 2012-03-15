@@ -23,9 +23,9 @@
 %% @private
 -spec start_link() -> {ok, pid()}.
 start_link() ->
-  Port = case application:get_env(web_port) of
+  Port = case application:get_env(match_stream, web_port) of
            undefined -> 8888;
-           P -> P
+           {ok, P} -> P
          end,
   error_logger:info_msg("Web player handler starting on port ~p~n", [Port]),
   mochiweb_http:start([{name, ?MODULE}, {loop, {?MODULE, loop}}, {port, Port}]).

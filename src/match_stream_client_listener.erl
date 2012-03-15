@@ -33,9 +33,9 @@
 %% @doc  Starts a new client listener
 -spec start_link() -> {ok, pid()}.
 start_link() -> 
-  Port = case application:get_env(port) of
+  Port = case application:get_env(match_stream, port) of
            undefined -> 9999;
-           P -> P
+           {ok, P} -> P
          end,
   gen_server:start_link({local, ?MODULE}, ?MODULE, Port, []).
 

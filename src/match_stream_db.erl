@@ -88,7 +88,7 @@ init([]) ->
               undefined -> 500
             end,
   {ok, Redis} =
-    case {application:get_env(redis_pwd), application:get_env(redis_db)} of
+    case {application:get_env(match_stream, redis_pwd), application:get_env(match_stream, redis_db)} of
       {undefined, undefined} ->
         erldis_client:start_link();
       {undefined, {ok, Db}} ->

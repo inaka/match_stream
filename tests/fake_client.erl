@@ -32,9 +32,11 @@ watch(N, C, Server, Port, UserIdPrefix) ->
     end, lists:seq(0, N-1, C)),
   {ROk, RSRT, RErr} =
     lists:foldl(fun(_, {Ok, SRT, Err}) ->
+                        io:format("Waiting for result #~p~n", [P]), 
                         receive
                           {ok, RT} -> {Ok+1, SRT + RT, Err};
-                          error -> {Ok, SRT, Err+1}
+                          error -> {Ok, SRT, Err+1};
+                          Other -> io:format("WTF?? ~p~n", [Other]), {Ok, SRT, Err+1}
                         end
                 end, {0, 0, 0}, lists:seq(1, N)),
   {ROk, erlang:round(RSRT/ROk), RErr}.

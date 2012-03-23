@@ -44,25 +44,45 @@ watch(N, C, Server, Port, UserIdPrefix) ->
 watch(Server, Port, UserId) ->
   case gen_tcp:connect(Server, Port, [binary, {packet, line}]) of
     {ok, Socket} ->
-      gen_tcp:send(Socket, <<"V:2:", UserId/binary, "\r\n">>),
-      loop(Socket);
+      run(UserId, Socket);
     Error ->
       throw(Error)
   end.
 
--spec loop(port()) -> {ok, pos_integer()}.
-loop(Socket) ->
-  loop(Socket, [], timestamp()).
+-spec run(binary(), port()) -> {ok, pos_integer()}.
+run(UserId, Socket) ->
+  wait_for_welcome(UserId, Socket, [], timestamp()).
 
--spec loop(port(), [binary()], pos_integer()) -> {ok, pos_integer()}.
-loop(Socket, [], Ts) ->
+-spec wait_for_welcome(binary(), port(), [binary()], pos_integer()) -> {ok, pos_integer()}.
+wait_for_welcome(UserId, Socket, [], Ts) ->
   receive
     {tcp, Socket, <<"Welcome to Match Stream.", _/binary>>} ->
       RT = timestamp() - Ts,
-      io:format("~p. ~p. First message in ~pms.~n", [self(), Socket, RT]),
-      loop(Socket, [], RT);
+      io:format("~p. ~p. Welcome message in ~pms.~n", [self(), Socket, RT]),
+      wait_for_welcome(UserId, Socket, [], RT);
     {tcp, Socket, <<"To watch the current game use: V:2:<your-name>", _/binary>>} ->
-      {loop(Socket, [{<<"connect">>, complete}]), Ts}
+      gen_tcp:send(Socket, <<"V:2:", UserId/binary, "\r\n">>),
+      wait_for_first_event(Socket, [{<<"connect">>, complete}], timestamp())
+  end.
+
+-spec wait_for_first_event(port(), [binary()], pos_integer()) -> {ok, pos_integer()}.
+wait_for_first_event(Socket, Events, Ts) ->
+  receive
+    {tcp, Socket, <<$\t, Msg/binary>>} -> %% A detail line, error
+      throw({detail_out_of_event, Msg});
+    {tcp, Socket, <<"\r\n">>} -> %% A closing line, error
+      throw(empty_event);
+    {tcp, Socket, Msg} -> %% A header line, we add the event to the list
+      RT = timestamp() - Ts,
+      case binary:split(Msg, [<<": ">>,<<":\n">>], [global, trim]) of
+        [_Date, Ev] ->
+          {loop(Socket, [Ev|Events]), RT};
+        _ ->
+          throw({invalid_header, Msg})
+      end;
+    {tcp_closed, Socket} ->
+      io:format("~p closed~n", [self()]),
+      throw({incomplete_match, hd(Events)})
   end.
 
 -spec loop(port(), [binary()]) -> ok.

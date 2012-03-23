@@ -1,10 +1,10 @@
 -module(fake_client).
 
--export([watch/4, watch/6]).
+-export([watch/3, watch/5]).
 
 %% @doc Spawn links N watchers
--spec watch(pos_integer(), pos_integer(), inet:ip_address() | inet:hostname(), pos_integer(), match_stream:user_id(), match_stream:match_id()) -> {non_neg_integer(), non_neg_integer()}.
-watch(N, C, Server, Port, UserIdPrefix, MatchId) ->
+-spec watch(pos_integer(), pos_integer(), inet:ip_address() | inet:hostname(), pos_integer(), match_stream:user_id()) -> {non_neg_integer(), non_neg_integer()}.
+watch(N, C, Server, Port, UserIdPrefix) ->
   Self = self(),
   lists:foreach(
     fun(I) ->
@@ -16,10 +16,10 @@ watch(N, C, Server, Port, UserIdPrefix, MatchId) ->
                       proc_lib:spawn_link(
                         fun() ->
                                 try
-                                  {T, ok} =
-                                      timer:tc(?MODULE, watch, [Server, Port, UserId, MatchId]),
+                                  {T, {ok, RT}} =
+                                      timer:tc(?MODULE, watch, [Server, Port, UserId]),
                                   io:format("Tester ~s done - ~p s~n", [UserId, erlang:round(T/1000000)]),
-                                  Self ! ok
+                                  Self ! {ok, RT}
                                 catch
                                   _:Error ->
                                     io:format("Tester ~s failed: ~p.~n\t~p~n", [UserId, Error, erlang:get_stacktrace()]),
@@ -30,27 +30,40 @@ watch(N, C, Server, Port, UserIdPrefix, MatchId) ->
             io:format("Hold on a second...~n", []),
             timer:sleep(250)
     end, lists:seq(0, N-1, C)),
-  lists:foldl(fun(_, {Ok, Err}) ->
-                      receive
-                        ok -> {Ok+1, Err};
-                        error -> {Ok, Err+1}
-                      end
-              end, {0, 0}, lists:seq(1, N)).
+  {ROk, RSRT, RErr} =
+    lists:foldl(fun(_, {Ok, SRT, Err}) ->
+                        receive
+                          {ok, RT} -> {Ok+1, SRT + RT, Err};
+                          error -> {Ok, SRT, Err+1}
+                        end
+                end, {0, 0, 0}, lists:seq(1, N)),
+  {ROk, erlang:round(RSRT/ROk), RErr}.
 
 %% @doc Connects to the server and watches a game till it ends
--spec watch(inet:ip_address() | inet:hostname(), pos_integer(), match_stream:user_id(), match_stream:match_id()) -> ok.
-watch(Server, Port, UserId, MatchId) ->
+-spec watch(inet:ip_address() | inet:hostname(), pos_integer(), match_stream:user_id()) -> ok.
+watch(Server, Port, UserId) ->
   case gen_tcp:connect(Server, Port, [binary, {packet, line}]) of
     {ok, Socket} ->
-      gen_tcp:send(Socket, <<"VERSION:1:CONNECT:", UserId/binary, ":MATCH:", MatchId/binary, "\r\n">>),
+      gen_tcp:send(Socket, <<"V:2:", UserId/binary, "\r\n">>),
       loop(Socket);
     Error ->
       throw(Error)
   end.
 
--spec loop(port()) -> ok.
+-spec loop(port()) -> {ok, pos_integer()}.
 loop(Socket) ->
-  loop(Socket, [{<<"connect">>, complete}]).
+  loop(Socket, [], timestamp()).
+
+-spec loop(port(), [binary()], pos_integer()) -> {ok, pos_integer()}.
+loop(Socket, [], Ts) ->
+  receive
+    {tcp, Socket, <<"Welcome to Match Stream.", _/binary>>} ->
+      RT = timestamp() - Ts,
+      io:format("~p. ~p. First message in ~pms.~n", [self(), Socket, RT]),
+      loop(Socket, [], RT);
+    {tcp, Socket, <<"To watch the current game use: V:2:<your-name>", _/binary>>} ->
+      {loop(Socket, [{<<"connect">>, complete}]), Ts}
+  end.
 
 -spec loop(port(), [binary()]) -> ok.
 loop(Socket, [{Event, complete}|Events]) ->
@@ -86,3 +99,9 @@ loop(Socket, [Event|Events]) ->
     {tcp_closed, Socket} ->
       throw({disconnected_on, Event})
   end.
+
+timestamp() ->
+  {_, _, MicroSecs} = erlang:now(),
+  Millis = erlang:trunc(MicroSecs/1000),
+  calendar:datetime_to_gregorian_seconds(
+    calendar:universal_time()) * 1000 + Millis.

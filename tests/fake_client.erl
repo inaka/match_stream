@@ -65,7 +65,8 @@ wait_for_welcome(UserId, Socket, [], Ts) ->
     {tcp, Socket, <<"To watch the current game use: V:2:<your-name>", _/binary>>} ->
       gen_tcp:send(Socket, <<"V:2:", UserId/binary, "\r\n">>),
       {ok, FRT} = wait_for_first_event(Socket, [{<<"connect">>, complete}], timestamp()),
-      {ok, erlang:max(Ts, FRT)}
+      {ok, erlang:max(Ts, FRT)};
+    Other -> throw({wtf, Other})
   end.
 
 -spec wait_for_first_event(port(), [binary()], pos_integer()) -> {ok, pos_integer()}.
@@ -86,7 +87,8 @@ wait_for_first_event(Socket, Events, Ts) ->
       end;
     {tcp_closed, Socket} ->
       io:format("~p closed~n", [self()]),
-      throw({incomplete_match, hd(Events)})
+      throw({incomplete_match, hd(Events)});
+    Other -> throw({wtf, Other})
   end.
 
 -spec loop(port(), [binary()]) -> ok.
@@ -109,7 +111,8 @@ loop(Socket, [{Event, complete}|Events]) ->
         <<"stop">> -> ok;
         <<"status">> -> ok;
         Event -> throw({incomplete_match, Event})
-      end
+      end;
+    Other -> throw({wtf, Other})
   end;
 loop(Socket, [Event|Events]) ->
   receive
@@ -121,7 +124,8 @@ loop(Socket, [Event|Events]) ->
     {tcp, Socket, Msg} -> %% A header line, we add the event to the list
       throw({incomplete_event, Event, Msg});
     {tcp_closed, Socket} ->
-      throw({disconnected_on, Event})
+      throw({disconnected_on, Event});
+    Other -> throw({wtf, Other})
   end.
 
 timestamp() ->

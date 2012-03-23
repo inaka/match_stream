@@ -31,7 +31,7 @@ watch(N, C, Server, Port, UserIdPrefix) ->
             timer:sleep(250)
     end, lists:seq(0, N-1, C)),
   {ROk, RSRT, RErr} =
-    lists:foldl(fun(_, {Ok, SRT, Err}) ->
+    lists:foldl(fun(P, {Ok, SRT, Err}) ->
                         io:format("Waiting for result #~p~n", [P]), 
                         receive
                           {ok, RT} -> {Ok+1, SRT + RT, Err};

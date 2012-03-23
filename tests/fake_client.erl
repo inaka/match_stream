@@ -62,7 +62,8 @@ wait_for_welcome(UserId, Socket, [], Ts) ->
       wait_for_welcome(UserId, Socket, [], RT);
     {tcp, Socket, <<"To watch the current game use: V:2:<your-name>", _/binary>>} ->
       gen_tcp:send(Socket, <<"V:2:", UserId/binary, "\r\n">>),
-      wait_for_first_event(Socket, [{<<"connect">>, complete}], timestamp())
+      {ok, FRT} = wait_for_first_event(Socket, [{<<"connect">>, complete}], timestamp()),
+      {ok, erlang:max(Ts, FRT)}
   end.
 
 -spec wait_for_first_event(port(), [binary()], pos_integer()) -> {ok, pos_integer()}.

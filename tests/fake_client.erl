@@ -76,6 +76,7 @@ wait_for_first_event(Socket, Events, Ts) ->
       RT = timestamp() - Ts,
       case binary:split(Msg, [<<": ">>,<<":\n">>], [global, trim]) of
         [_Date, Ev] ->
+          io:format("~p. ~p. First message in ~pms.~n", [self(), Socket, RT]),
           {loop(Socket, [Ev|Events]), RT};
         _ ->
           throw({invalid_header, Msg})

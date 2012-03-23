@@ -44,7 +44,7 @@ watch(N, C, Server, Port, UserIdPrefix) ->
 %% @doc Connects to the server and watches a game till it ends
 -spec watch(inet:ip_address() | inet:hostname(), pos_integer(), match_stream:user_id()) -> ok.
 watch(Server, Port, UserId) ->
-  case gen_tcp:connect(Server, Port, [binary, {packet, line}]) of
+  case gen_tcp:connect(Server, Port, [binary, {packet, line}, {send_timeout, 32000}, {send_timeout_close, true}]) of
     {ok, Socket} ->
       run(UserId, Socket);
     Error ->

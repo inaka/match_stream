@@ -1,4 +1,4 @@
-RUN := +P 999999 +Bc +K true -smp enable -pa ebin deps/*/ebin -s crypto -s inets -s ssl -s elog ${ERLARGS} 
+RUN := +P 99999999 +Bc +K true -smp enable -pa ebin deps/*/ebin -s crypto -s inets -s ssl -s elog -s socketio ${ERLARGS} 
 
 all:
 	rebar get-deps && rebar compile

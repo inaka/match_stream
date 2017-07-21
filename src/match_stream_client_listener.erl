@@ -10,138 +10,71 @@
 
 -include("match_stream.hrl").
 
--behaviour(gen_server).
+-behaviour(gen_event).
 
 %% -------------------------------------------------------------------
 %% Exported functions
 %% -------------------------------------------------------------------
 -export([start_link/1]).
--export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
+-export([init/1, handle_event/2, handle_call/2, handle_info/2, terminate/2, code_change/3]).
+-export([handle_request/3]).
 
--define(TCP_OPTIONS,[binary,
-                     {packet, line},
-                     {keepalive, true},
-                     {active, false},
-                     {reuseaddr, true},
-                     {nodelay, true}, %% We want to be informed even when packages are small
-                     {backlog, 128000}, %% We don't care if we have logs of pending connections, we'll process them anyway
-                     {send_timeout, 32000}, %% If we couldn't send a message in 32 secs. something is definitively wrong...
-                     {send_timeout_close, true} %%... and therefore the connection should be closed
-                     ]).
-
--record(state, {listener :: port(), % Listening socket
-                acceptor :: term()  % Asynchronous acceptor's internal reference
-               }).
+-record(state, {port :: pos_integer()}).
+-type state() :: #state{}.
 
 %% ====================================================================
 %% External functions
 %% ====================================================================
-
 %% @doc  Starts a new client listener
 -spec start_link(pos_integer()) -> {ok, pid()}.
 start_link(Port) -> 
-  gen_server:start_link(
-    {local, list_to_atom("match-stream-client-listener-" ++ integer_to_list(Port))},
-    ?MODULE, Port, []).
+  {ok, Pid} = socketio_listener:start([{http_port, Port},
+                                       {default_http_handler, ?MODULE}]),
+  ok = gen_event:add_handler(socketio_listener:event_manager(Pid), ?MODULE, Port),
+  {ok, Pid}.
 
 %% ====================================================================
 %% Callback functions
 %% ====================================================================
 %% @hidden
--spec init(pos_integer()) -> {ok, #state{}} | {stop, term()}.
-init(Port) ->
-  case gen_tcp:listen(Port, ?TCP_OPTIONS) of
-    {ok, Socket} ->
-      {ok, Ref} = prim_inet:async_accept(Socket, -1),
-      ?INFO("Client listener initialized (listening on port ~p)~n", [Port]),
-      {ok, #state{listener = Socket,
-                  acceptor = Ref}};
-    {error, Reason} ->
-      ?THROW("Client listener couldn't listen to port ~p: ~p~n", [Port, Reason]),
-      {stop, Reason}
-    end.
+-spec init(pos_integer()) -> {ok, state()}.
+init(Port) -> {ok, #state{port = Port}}.
 
-%% @hidden
--spec handle_call(X, reference(), #state{}) -> {stop, {unknown_request, X}, {unknown_request, X}, #state{}}.
-handle_call(Request, _From, State) ->
-  {stop, {unknown_request, Request}, {unknown_request, Request}, State}.
+%% @private
+-spec handle_event({client|disconnect, pid()} | term(), state()) -> {ok, state()}.
+handle_event({client, Pid}, State) ->
+  ok = match_stream_client:start(Pid),
+  {ok, State};
+handle_event({disconnect, Pid}, State) ->
+  ?DEBUG("~p disconnecting...~n", [Pid]),
+  {ok, State};
+handle_event(Event, State) ->
+  ?INFO("Ignored socketio event: ~p~n", [Event]),
+  {ok, State}.
 
-%% @hidden
--spec handle_cast(any(), #state{}) -> {noreply, #state{}, hibernate}.
-handle_cast(_Msg, State) -> {noreply, State, hibernate}.
+%% @private
+-spec handle_call(term(), state()) -> {ok, ok, state()}.
+handle_call(_Request, State) -> {ok, ok, State}.
+%% @private
+-spec handle_info(term(), state()) -> {ok, state()}.
+handle_info(_Info, State) -> {ok, State}.
 
-%% @hidden
--spec handle_info(any(), #state{}) -> {noreply, #state{}, hibernate}.
-handle_info({inet_async, ListSock, Ref, {ok, CliSocket}},
-            #state{listener = ListSock, acceptor = Ref} = State) ->
-  try
-    PeerPort =
-      case inet:peername(CliSocket) of
-        {ok, {_Ip, Port}} -> Port;
-        PeerErr -> PeerErr
-      end,
-    case set_sockopt(ListSock, CliSocket) of
-      ok ->
-        void;
-      {error, Reason} ->
-        exit({set_sockopt, Reason})
-    end,
-    
-    %% New client connected - spawn a new process using the simple_one_for_one supervisor.
-    ?DEBUG("Client ~p starting...~n", [PeerPort]),
-    {ok, Pid} = match_stream_client_sup:start_client(),
-    
-    ok = gen_tcp:controlling_process(CliSocket, Pid),
-    
-    %% Instruct the new FSM that it owns the socket.
-    ok = match_stream_client:set_socket(Pid, CliSocket),
-    
-    %% Signal the network driver that we are ready to accept another connection
-    NewRef =
-      case prim_inet:async_accept(ListSock, -1) of
-        {ok, NR} ->
-          NR;
-        {error, Err} ->
-          exit({async_accept, inet:format_error(Err)})
-      end,
-    
-    {noreply, State#state{acceptor = NewRef}, hibernate}
-  catch
-    exit:Error ->
-      {stop, Error, State}
-  end;
-handle_info({inet_async, ListSock, Ref, Error},
-            #state{listener = ListSock, acceptor = Ref} = State) ->
-  {stop, Error, State};
-handle_info(_Info, State) ->
-  {noreply, State, hibernate}.
+%% @private
+-spec terminate(term(), state()) -> ok.
+terminate(Reason, #state{port = Port}) ->
+  ?WARN("Socket IO on port ~p terminating: ~p~n", [Port, Reason]).
 
-%% @hidden
--spec terminate(any(), #state{}) -> any().
-terminate(_Reason, _State) -> ok.
-
-%% @hidden
--spec code_change(any(), any(), any()) -> {ok, any()}.
+%% @private
+-spec code_change(term(), state(), term()) -> {ok, state()}.
 code_change(_OldVsn, State, _Extra) -> {ok, State}.
 
-%% ====================================================================
-%% Internal functions
-%% ====================================================================
-%% @doc Taken from prim_inet. We are merely copying some socket options from the
-%%      listening socket to the new client socket.
--spec set_sockopt(port(), port()) -> ok | {error, Reason :: term()}.
-set_sockopt(ListSock, CliSocket) ->
-  true = inet_db:register_socket(CliSocket, inet_tcp),
-  case prim_inet:getopts(ListSock, [active, nodelay, keepalive, delay_send, priority, tos]) of
-    {ok, Opts} ->
-      case prim_inet:setopts(CliSocket, Opts) of
-        ok ->
-          ok;
-        Error ->
-          gen_tcp:close(CliSocket),
-          Error
-      end;
-    Error ->
-      gen_tcp:close(CliSocket),
-      Error
-  end.
+%% @private
+-spec handle_request(atom(), [string()], term()) -> term().
+handle_request('GET', [], Req) ->
+  handle_request('GET', ["index.html"], Req);
+handle_request('GET', Path, Req) ->
+  ?INFO("~p~n", [filename:join(Path)]),
+  Req:file(filename:join(["wwwroot"| Path]));
+handle_request(Method, Path, Req) ->
+  ?WARN("~p: ~s~n\t~p~n", [Method, string:join(Path, "/"), Req]),
+  Req:respond(405). %% Method not allowed

@@ -7,7 +7,7 @@
 -module(match_stream_user_sup).
 
 -include("match_stream.hrl").
--define(MANAGERS, 400). %%NOTE: To reduce message_queue_lens on massive user initialization
+-define(MANAGERS, 20). %%NOTE: To reduce message_queue_lens on massive user initialization
 
 -behaviour(supervisor).
 

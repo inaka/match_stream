@@ -1,6 +1,6 @@
 {application, match_stream,
  [
-  {description, "Watch your favorite games through tcp"},
+  {description, "Watch your favorite soccer matches"},
   {vsn, "0.1"},
   {registered, []},
   {applications, [

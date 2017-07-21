@@ -1,0 +1,375 @@
+/*ESTRUCTURA*/
+body {
+	margin: 0;
+	padding: 0;
+	background-color: #FFFFFF;
+	line-height: 1.5em;
+	font-family: Arial, Helvetica, sans-serif;
+}
+
+* {
+	outline: 0px;
+	margin: 0;
+	padding: 0;
+	border: 0;
+	vertical-align: baseline;
+}
+
+#main {
+	background: #FFF;
+	width: 624px;
+	margin-bottom: 15px;
+}
+
+.name {
+	font-weight: bold;
+	color: #729013;
+	padding: 0px;
+}
+
+#header-container {
+	height: 106px;
+}
+
+#header {
+	width: 618px;
+	height: 100px;
+	position: relative;
+	padding: 3px;
+	background: darkgreen;
+}
+
+#headerContent {
+	display: none;
+}
+
+#home {
+	position: absolute;
+	width: 250px;
+	top: 8px;
+	left: 10px;
+}
+
+.crest {
+	float: left;
+	width: 48px;
+	height: 48px;
+}
+
+.team-name {
+	font-family: Tahoma, Arial;
+	font-size: 22px;
+	font-weight: bold;
+	color: #FFFFFF;
+	width: 180px;
+	float: left;
+}
+
+.shadowed {
+	text-shadow: -1px -1px 1px #000000;
+	filter: dropshadow(color = #000000, offx = -1, offy = -1);
+}
+
+#visit {
+	position: absolute;
+	width: 250px;
+	top: 8px;
+	right: 10px;
+}
+
+#visit-name,#visit-crest {
+	float: right !important;
+	text-align: right;
+}
+
+#game-status {
+	height: 78px;
+	left: 263px;
+	padding-top: 8px;
+	position: absolute;
+	top: 4px;
+	width: 100px;
+}
+
+#time {
+	white-space: nowrap;
+	background-color: black;
+	color: #FFFFFF;
+	font-family: Arial;
+	font-size: 18px;
+	font-weight: bold;
+	height: 24px;
+	margin-top: 0px;
+	padding-left: 5px;
+	padding-right: 5px;
+	padding-top: 3px;
+	padding-bottom: 2px;
+	text-align: center;
+	width: 89px;
+}
+
+#score {
+	white-space: nowrap;
+	color: #FFFFFF;
+	letter-spacing: 5px;
+	font-family: Tahoma, Arial;
+	font-size: 48px;
+	line-height: 1;
+	position: relative;
+	top: -4px;
+	font-weight: bold;
+	text-align: center;
+	width: 100px;
+}
+
+#stadium {
+	color: #E7E7E7;
+	font-size: 11px;
+	font-weight: bold;
+	height: 20px;
+	padding-right: 20px;
+	position: absolute;
+	right: 18px;
+	text-align: right;
+	top: 67px;
+	width: 215px;
+}
+
+#content-column {
+	width: 403px;
+	float: left;
+	padding: 0;
+	margin-left: 5px;
+	background: #FFF;
+	z-index: 0;
+}
+
+#stream {
+	height: 480px;
+	font-size: 14px;
+	color: #7f7f7f;
+	line-height: normal;
+	z-index: 0;
+	width: 401px;
+	font-weight: bold;
+	margin-left: 100px;
+	border-left: solid 1px #dcddde;
+	border-right: solid 1px #dcddde;
+	background-color: #FFF;
+	overflow: auto;
+	overflow-x: hidden;
+	overflow-y: hidden;
+	position: relative;
+}
+
+#footer {
+	background: #aea89d;
+	padding: 10px;
+	bottom: 0;
+	display: block;
+	height: 75px;
+	position: absolute;
+	width: 100%;
+	z-index: 1;
+}
+
+#footer ul {
+	list-style: none;
+}
+
+#footer li {
+	float: left;
+}
+
+#footer .clearfix {
+	display: block;
+}
+
+#footer .clearfix::after {
+	content: " 0020";
+	display: block;
+	height: 0;
+	clear: both;
+	visibility: hidden;
+	overflow: hidden;
+}
+
+#footer .fbtn {
+	font-family: 'HelveticaNeue-Heavy', 'Helvetica Neue Heavy', 'Helvetica Neue', Arial, Helvetica, sans-serif;
+	font-weight: 900;
+	background: #8b8374;
+	padding: 12px;
+	border: 0px;
+	font-size: 14px;
+	color: #fde240;
+	width: 95px;
+	height: 42px;
+	margin: 0px;
+}
+
+textarea#commentbox {
+	background: #ccc7be;
+	padding-top: 11px;
+	padding-bottom: 11px;
+	padding-right: 10px;
+	padding-left: 10px;
+	font-size: 14px;
+	color: #545454;
+	font-family: Arial, sans-serif;
+	width: 285px;
+	height: 40px;
+	margin-top: 0px;
+	resize: none;
+}
+
+div#user-info-box {
+	margin-left: 5px;
+	margin-top: 25px;
+	display: none;
+	width: 97px;
+}
+
+div#user-info-box img {
+	width: 30px;
+	vertical-align: middle;
+}
+
+.name a {
+	color: #666 !important;
+	text-decoration: none;
+}
+
+.name a:hover {
+	color: #444 !important;
+	text-decoration: underline;
+}
+
+.clear {
+	clear: both;
+}
+
+ul#events {
+	list-style: none;
+	margin: 0px;
+	padding: 0px;
+	font-weight: normal;
+	border-top: 1px solid #dcddde;
+	position: relative;
+	top: 0px;
+	height: 400px;
+	overflow-y: auto;
+}
+
+ul#events * {
+	margin: 0px;
+	padding: 0px;
+	list-style: none;
+}
+
+ul#events>li {
+	
+}
+
+ul#events li .eventBox {
+	background-color: #E0E0E0;
+	background-image: url("../images/backIncidencia.jpg");
+	border-bottom: 1px solid #DCDDDE;
+	padding: 10px;
+	background-repeat: repeat-x;
+}
+
+ul#events li .event-time {
+	color: #000;
+	font-weight: bold;
+	font-size: 16px;
+}
+
+ul#events li .event-detail {
+	width: 75px;
+	height: 52px;
+	float: left;
+	background: no-repeat right top;
+}
+
+ul#events li .event-text {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 14px;
+	font-weight: normal;
+	padding-left: 75px;
+}
+
+ul#events li .event-options {
+	clear: both;
+	margin-left: 75px;
+	font-size: 11px;
+	font-weight: normal;
+}
+
+ul#events ul.social-local li {
+	float: left;
+	margin-right: 15px;
+}
+
+ul#events ul.social-local li a {
+	text-decoration: none;
+	color: #0E72E3;
+}
+
+ul#events ul.social-media {
+	float: right;
+	margin-right: 5px;
+}
+
+ul#events ul.social-media li {
+	float: left;
+}
+
+ul#events ul.social-media li a {
+	display: block;
+	width: 16px;
+	height: 16px;
+	background: no-repeat center center;
+	text-indent: -9000px;
+	overflow: hidden;
+	margin-left: 5px;
+}
+
+ul#events ul.social-media li.buzz a {
+	background-image: url(../images/icon_red_buzz.png);
+}
+
+ul#events ul.social-media li.twitter a {
+	background-image: url(../images/icon_red_twitter.png);
+}
+
+ul#events ul.social-media li.facebook a {
+	background-image: url(../images/icon_red_facebook.png);
+}
+
+ul#events li .event-main .like {
+	padding: 5px 3px 5px 30px; .
+	padding: 2px 3px 5px 30px;
+	clear: both;
+	border: 1px solid #dcddde;
+	background: url(../images/icon_gusto.gif) no-repeat 10px 5px;
+	margin-left: 75px;
+	font-size: 11px;
+	margin-top: 10px;
+}
+
+ul#events li .event-form-msg {
+	padding: 5px;
+	clear: both;
+	border: 1px solid #8e8e8e;
+	background: #EFEFEF;
+	font-size: 11px;
+	color: #666;
+	font-weight: bold;
+	margin-bottom: 5px;
+}
+
+ul#events li .event-main .like a {
+	font-weight: bold;
+	text-decoration: none;
+	color: #3788E3;
+}

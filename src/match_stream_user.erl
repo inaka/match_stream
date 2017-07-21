@@ -31,8 +31,11 @@ watch(UserId, MatchId, Client) ->
       {error, {already_started, Pid}} -> Pid
     end,
   case gen_server:call(UserPid, {watch, MatchId, Client}, 20000) of
-    ok -> ok;
-    {error, Error} -> throw({error, Error})
+    ok ->
+      ?INFO("~s watching ~s...~n", [UserId, MatchId]),
+      ok;
+    {error, Error} ->
+      throw({error, Error})
   end.
 
 %% =================================================================================================
@@ -76,7 +79,12 @@ handle_call({watch, MatchId, Client}, _From, State) ->
                                  {visit,          Match#match_stream_match.visit},
                                  {visit_players,  Match#match_stream_match.visit_players},
                                  {visit_score,    Match#match_stream_match.visit_score},
-                                 {period,         Match#match_stream_match.period}]},
+                                 {period,         Match#match_stream_match.period},
+                                 {stadium,        Match#match_stream_match.stadium} |
+                                     case Match#match_stream_match.period_start of
+                                       undefined -> [];
+                                       StartTS -> [{period_start, StartTS}]
+                                     end]},
         ok = match_stream_client:send(Client, MatchStatus),
         %% Then we subscribe to the match stream so we can get updates from now on
         %% or we disconnect the client if there's no manager to subscribe to
@@ -92,15 +100,20 @@ handle_call({watch, MatchId, Client}, _From, State) ->
               ok = match_stream_user_handler:add_handler(MatchId, State#state.user_id, Client),
               erlang:monitor(process, erlang:whereis(match_stream_match:event_manager(MatchId)))
           end,
-        ClientRef = erlang:monitor(process, Client),
-        {reply, ok,
-         State#state{matches = [{Client, MatchId, ClientRef, MatchRef} | State#state.matches]},
-         hibernate}
+        case MatchRef of
+          undefined ->
+            {reply, ok, State, hibernate};
+          MatchRef ->
+            ClientRef = erlang:monitor(process, Client),
+            {reply, ok,
+             State#state{matches = [{Client, MatchId, ClientRef, MatchRef} | State#state.matches]},
+             hibernate}
+        end
     end
   catch
     _:Error ->
-      ?WARN("~s couldn't subscribe to ~s: ~p~n", [State#state.user_id, MatchId, Error]),
-      ok = match_stream_client:send(Client, "ERROR: Couldn't subscribe to match.\n"),
+      ?ERROR("~s couldn't subscribe to ~s: ~p~n", [State#state.user_id, MatchId, Error]),
+      ok = match_stream_client:err(Client, <<"Couldn't subscribe to match.\n">>),
       {reply, {error, Error}, State, hibernate}
   end.
 
